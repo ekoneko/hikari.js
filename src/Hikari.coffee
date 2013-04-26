@@ -1,5 +1,5 @@
 class @Hikari
-	frame = 0
+	is: 'hikari'
 	global = =>
 		@Audio		= Audio
 		@Bitmap		= Bitmap
@@ -11,20 +11,32 @@ class @Hikari
 		@NetWork	= Network
 		@Window		= Window
 
-	update: ()=>
-		# do something
-		setTimeout ()=>
-			@update
-		, frame
+	init = ->
+		r = window.requestAnimationFrame or
+		window.webkitRequestAnimationFrame or
+		window.mozRequestAnimationFrame or
+		window.oRequestAnimationFrame or
+		window.msRequestAnimationFrame or
+		setTimeout (callback)->
+			callback()
+		, 60
+		window.requestAnimationFrame = r
 
-	constructor: (_frame, container, width, height, callback)->
+	update: ()=>
+		@stage.update()
+		@update()
+			
+
+	constructor: (container, width, height, callback)->
 		# 设置全局变量
 		global()
+		# 初始化
+		init()
 		# 创建一个Stage(绘制canvas)
 		@stage = new Stage width, height, container
 		# 加载资源
 
 		# 刷新
-		frame = _frame
 		@update()
+
 		callback() if typeof callback is 'function'

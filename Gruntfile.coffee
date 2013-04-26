@@ -5,14 +5,15 @@ module.exports = (grunt)->
 				options:
 					join: on
 				files:
-					"hikari.js" : "src/*.coffee"
-					"test/test.js" : "test/test.coffee"
+					"hikari.js" : ['src/*.coffee', 'src/*/*.coffee']
+					"test/test.js" : "test/*.coffee"
 		watch:
 			scripts:
-				files: ['src/*.coffee', 'test/test.coffee']
+				files: ['src/*', 'src/*/*', 'test/test.coffee']
 				tasks: ['coffee']
 
 	grunt.loadNpmTasks 'grunt-contrib-coffee'
 	grunt.loadNpmTasks 'grunt-contrib-watch'
+	grunt.loadNpmTasks 'grunt-contrib-concat'
 
-	grunt.registerTask 'default', ['coffee', 'watch']
+	grunt.registerTask 'default', ['coffee', 'watch', 'concat']

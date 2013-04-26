@@ -1,13 +1,25 @@
-class Stage
+class Stage extends Object
+	list = []
 	canvas: null
 	context: null
+	width: 0
+	height: 0
+	is: 'stage'
 
 	append: (o)=>
-		if ['bitmap', 'sprite', 'window'].indexOf(o.isA) is -1
+		unless typeof o.draw is 'function'
 			console.log 'error: object cannt append to canvas'
 			return
-		@context.drawImage o.entity, o.x, o.y, o.width, o.height
+		list.push o
+		o.draw @context
+
+	update: ()=>
+		context.clearRect 0, 0, @width, @height
+		item.update() for item in list
+
 	constructor: (width, height, container)->
+		@width = width
+		@height = height
 		@canvas = document.createElement 'canvas'
 		@canvas.width = width
 		@canvas.height = height

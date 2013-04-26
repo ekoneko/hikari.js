@@ -4,6 +4,7 @@
   "devDependencies": {
     "grunt": "*",
     "grunt-contrib-coffee": "*",
-    "grunt-contrib-watch": "*"
+    "grunt-contrib-watch": "*",
+    "grunt-contrib-concat": "*"
   }
 }
