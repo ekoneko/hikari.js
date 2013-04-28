@@ -1,30 +1,24 @@
 class @Hikari
-	is: 'hikari'
+	delay = null
+	type: 'hikari'
 	global = =>
 		@Audio		= Audio
-		@Bitmap		= Bitmap
-		@Sprite		= Sprite
+		@Draw		= Draw
+		@HTML		= HTML
 		@Event		= Event
-		@Graphics	= Graphics
 		@Keyboard	= Keyboard
 		@Mouse		= Mouse
 		@NetWork	= Network
-		@Window		= Window
 
 	init = ->
-		r = window.requestAnimationFrame or
-		window.webkitRequestAnimationFrame or
-		window.mozRequestAnimationFrame or
-		window.oRequestAnimationFrame or
-		window.msRequestAnimationFrame or
-		setTimeout (callback)->
-			callback()
-		, 60
-		window.requestAnimationFrame = r
+		delay = (callback)->
+			setTimeout ()->
+				callback()
+			, 60
 
 	update: ()=>
 		@stage.update()
-		@update()
+		delay @update
 			
 
 	constructor: (container, width, height, callback)->
@@ -39,4 +33,4 @@ class @Hikari
 		# 刷新
 		@update()
 
-		callback() if typeof callback is 'function'
+		callback this if typeof callback is 'function'

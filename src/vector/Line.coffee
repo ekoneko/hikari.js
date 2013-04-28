@@ -1,3 +1,0 @@
-class VectorLine
-	constructor: ()->
-		true

@@ -33,20 +33,36 @@ grunt
 开启监听进程
 
 ## 结构 && TODO
+
 ### Hikari
+
 核心代码，提供唯一入口和实例化
+
+### Viewport
+
+Canvas的绘图抽象
+
 ### Bitmap
 位图类
+
 ### Sprite
 
-### Graphics
+### Vector
 
-### Window
-
+### HTML
+非Canvas的显示控制，主要用显示不需要逐帧刷新的内容展示
+>
+>#### HTML.IMG
+>img元素
+>
+>#### HTML.BLOCK
+>由div包裹的块元素
+>
 ### Store
 
 ### Stage
 负责画面展示的舞台，用于管理canvas以及将元素放入/移除画面
+
 ### Audio
 
 ### Keyboard
