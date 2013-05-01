@@ -11,7 +11,7 @@ class Stage extends Object
 		unless o.type is 'draw'
 			console.log 'error: object cannt append to canvas', o
 			return
-		list.push o if o.drawType is 'sprite'
+		list.push o if ['bitmap', 'sprite'].indexOf o.drawType > -1
 		o.draw this
 
 	update: ()=>

@@ -1,11 +1,10 @@
 class Draw.Bitmap extends Draw
-	context = null
-
 	drawType: 'bitmap'
-	isDisposed: on
+	__isDisposed: on
 	entity: null
+	__context: null
 
-	options:
+	__options:
 		sourceX: 0
 		sourceY: 0
 		sourceWidth: 0
@@ -20,42 +19,61 @@ class Draw.Bitmap extends Draw
 	load: (src, callback)=>
 		@entity = new Image()
 		@entity.onload = ()=>
-			@options.sourceWidth = @entity.width
-			@options.sourceHeight = @entity.height
-			callback this
+			@options
+				sourceWidth: @entity.width
+				sourceHeight: @entity.height
+			callback this if typeof callback is 'function'
 		@entity.src = src
 
 	draw: (stage)=>
-		context = stage.context if stage
-		@isDisposed = true
+		@__context = stage.context if stage
+		@__isDisposed = true
 		@update()
 
 	clone: ()=>
-		newBitmap = new Bitmap @width, @height
-		newBitmap.entity = @entity.cloneNode() if @entity
+		newBitmap = new Bitmap @__width, @__height
+		newBitmap.entity = @entity if @entity
 		super newBitmap, this
 
 	update: (_context)=>
-		context = _context if _context
-		return off unless @isDisposed and context
-		context.globalAlpha = @options.alpha
-		context.scale @options.scaleX, @options.scaleY
-		context.transform @options.transX, @options.transY
-		context.rotate @options.rotate
-		context.drawImage @entity,
-			@options.sourceX, @options.sourceY,
-			@options.sourceWidth, @options.sourceHeight,
-			@x, @y, @width, @height
+		@__context = _context if _context
+		return off unless @__isDisposed and @__context
+		@__context.globalAlpha = @__options.alpha
+		@__context.scale @__options.scaleX, @__options.scaleY
+		@__context.transform @__options.transX, @__options.transY
+		@__context.rotate @__options.rotate
+		@__context.drawImage @entity,
+			@__options.sourceX, @__options.sourceY,
+			@__options.sourceWidth, @__options.sourceHeight,
+			@__x, @__y, @__width, @__height
+
 
 	dispose: (value)=>
-		@isDisposed = value if value
-		@isDisposed
+		@__isDisposed = value if value
+		@__isDisposed
 
 	destroy: ()=>
 		delete @entity
 		super()
 
+	reset: ()=>
+		@__options =
+			sourceX: 0
+			sourceY: 0
+			sourceWidth: 0
+			sourceHeight: 0
+			transX: 0
+			transY: 0
+			scaleX: 1
+			scaleY: 1
+			alpha: 1
+			rotate: 0
+
 	constructor: (width, height)->
-		@width = width
-		@height = height
+		@__options = {}
+		@entity = null
+		@__context = null
+		@reset()
+		@width width
+		@height height
 		nextUpdate = @frequency

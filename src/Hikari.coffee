@@ -1,31 +1,38 @@
 class @Hikari
-	delay = null
 	type: 'hikari'
+	__delay: null
+	times: 0
+	fps: 0
 	global = =>
 		@Audio		= Audio
 		@Draw		= Draw
 		@HTML		= HTML
+		@DateType	= DateType
+		@Vector		= Vector
 		@Event		= Event
 		@Keyboard	= Keyboard
 		@Mouse		= Mouse
 		@NetWork	= Network
 
-	init = ->
-		delay = (callback)->
+	init: =>
+		@__delay = (callback)->
 			setTimeout ()->
 				callback()
-			, 60
+			, @times
 
 	update: ()=>
 		@stage.update()
-		delay @update
+		@__delay @update
 			
 
 	constructor: (container, width, height, callback)->
+		@fps = 30
+		@times = 1000 / 30
+
 		# 设置全局变量
 		global()
 		# 初始化
-		init()
+		@init()
 		# 创建一个Stage(绘制canvas)
 		@stage = new Stage width, height, container
 		# 加载资源

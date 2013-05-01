@@ -1,5 +1,6 @@
 class Vector extends Object
 
+	vectorType: ''
 	setOptions: (_options)=>
 		for key of _options
 			unless typeof options[key] is 'undefined'

@@ -38,25 +38,47 @@ grunt
 
 核心代码，提供唯一入口和实例化
 
-### Viewport
-
-Canvas的绘图抽象
-
-### Bitmap
-位图类
-
-### Sprite
-
-### Vector
-
+### Draw
+>
+>Canvas的绘图抽象
+>
+>#### Draw.Bitmap
+> 位图
+>
+>#### Draw.Sprite
+> 精灵
+>
+>#### Draw.Vector
+> 矢量图
+>
 ### HTML
-非Canvas的显示控制，主要用显示不需要逐帧刷新的内容展示
+>非Canvas的显示控制，主要用显示不需要逐帧刷新的内容展示
 >
 >#### HTML.IMG
 >img元素
 >
 >#### HTML.BLOCK
 >由div包裹的块元素
+>
+
+### DateType
+> 一些基础数据类型的封装
+>
+> #### DateType.Color
+> 颜色
+>
+> #### DateType.Tone
+> 色调
+>
+
+### Vector
+> 矢量图形
+>
+> #### Vector.Line
+> 线段
+>
+> #### Vector.Rect
+> 矩形
 >
 ### Store
 
