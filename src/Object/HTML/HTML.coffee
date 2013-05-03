@@ -1,11 +1,16 @@
 class HTML extends Object
-	type: 'html'
+
+	__type: 'html'
 	tag: null
 	element: null
 	stage: null
 	onStage: off
 
-	append: ()=>
+	htmlType: ()=>
+		@__htmlType
+
+	append: (stage)=>
+		@stage = stage if stage and stage.type is 'stage'
 		@stage.box.appendChild @element
 		@onStage = on
 

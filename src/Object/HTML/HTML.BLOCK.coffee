@@ -1,24 +1,24 @@
 class HTML.BLOCK extends HTML
-	htmlType: 'block'
-	attribute =
+
+	__htmlType: 'block'
+	__attribute:
 		x: 0
 		y: 0
 		z: 1
 		width: 0
 		height: 0
 
-	style = (div)->
+	__style: (div)=>
 		div.style.position = 'absolute'
-		div.style.left = "#{attribute.x}px"
-		div.style.top = "#{attribute.y}px"
-		div.style.width = "#{attribute.width}px"
-		div.style.height = "#{attribute.height}px"
+		div.style.left = "#{@__attribute.x}px"
+		div.style.top = "#{@__attribute.y}px"
+		div.style.width = "#{@__attribute.width}px"
+		div.style.height = "#{@__attribute.height}px"
 		div.style.zIndex = attribute.z
 
 	build: (options, callback)=>
 		@element = document.createElement 'div'
-		for i in ['x', 'y', 'z', 'width', 'height']
-			attribute[i] = options[i]
+		@set options
 
 		style @element
 		if typeof options.content is 'string'
@@ -32,10 +32,17 @@ class HTML.BLOCK extends HTML
 		@remove()
 		super()
 
-	set: (options)=>
+	options: (options)=>
 		for i in ['x', 'y', 'z', 'width', 'height']
-			attribute[i] = options[i] if options[i]
-		style @element
+			@__attribute[i] = options[i] if options[i]
+		@__style @element
 
 	constructor: (stage)->
-		@stage = stage if stage and stage.type is 'stage'
+		@__attribute = 
+			x: 0
+			y: 0
+			z: 1
+			width: 0
+			height: 0
+		@stage = null
+		@stage = stage if stage and stage.type() is 'stage'

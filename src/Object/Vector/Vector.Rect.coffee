@@ -1,6 +1,6 @@
 class Vector.Rect extends Vector
 
-	vectorType: 'rect'
+	__vectorType: 'rect'
 	options:
 		start: 
 			x: 0

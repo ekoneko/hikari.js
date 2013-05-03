@@ -1,8 +1,8 @@
-class DateType.Tone extends DateType
+class DataType.Tone extends DataType
 
-	dataType: 'tone'
+	__dataType: 'tone'
 	
-	options:
+	__options:
 		r: 0
 		g: 0
 		b: 0
@@ -18,33 +18,33 @@ class DateType.Tone extends DateType
 
 	red: (r)=>
 		if typeof r is 'number'
-			@options.r = scope r, -255, 255
+			@__options.r = scope r, -255, 255
 			@noChange = off
-		@options.r
+		@__options.r
 
 	green: (g)=>
 		if typeof g is 'number'
-			@options.g = scope g, -255, 255
+			@__options.g = scope g, -255, 255
 			@noChange = off
-		@options.g
+		@__options.g
 
 	blue: (b)=>
 		if typeof b is 'number'
-			@options.b = scope b, -255, 255
+			@__options.b = scope b, -255, 255
 			@noChange = off
-		@options.b
+		@__options.b
 
 	alpha: (a)=>
 		if typeof a is 'number'
-			@options.alpha = scope a, 0, 1
+			@__options.alpha = scope a, 0, 1
 			@noChange = off
-		@options.alpha
+		@__options.alpha
 
 	transparent: (t)=>
-		if t and t.dataType and t.dataType is 'color'
-			@options.transparent = t
+		if t and t.dataType and t.dataType() is 'color'
+			@__options.transparent = t
 			@noChange = off
-		@options.transparent
+		@__options.transparent
 
 	rgb: (r, g, b)=>
 		if typeof r is 'object'
@@ -55,9 +55,9 @@ class DateType.Tone extends DateType
 
 	gray: (gray)=>
 		if gray
-			@options.gray = !!gray
+			@__options.gray = !!gray
 			@noChange = off
-		@options.gray
+		@__options.gray
 
 	opposite: (opposite)=>
 		if opposite
@@ -66,41 +66,41 @@ class DateType.Tone extends DateType
 		@_opposite
 
 	reset: ()=>
-		@options.r = @options.g = @options.b = 0
-		@options.gray = off
-		@options.opposite = off
-		@options.alpha = 1
-		@options.transparent = null
+		@__options.r = @__options.g = @__options.b = 0
+		@__options.gray = off
+		@__options.opposite = off
+		@__options.alpha = 1
+		@__options.transparent = null
 		@noChange = on
 
 	mix: (r, g, b, a)=>
-		if @options.transparent and a > 0
-			if r is @options.transparent.red() and
-			g is @options.transparent.green() and
-			b is @options.transparent.blue()
+		if @__options.transparent and a > 0
+			if r is @__options.transparent.red() and
+			g is @__options.transparent.green() and
+			b is @__options.transparent.blue()
 				return [r, g, b, 0]
 
-		if @options.gray
+		if @__options.gray
 			average = (r * 299 + g * 587 + b * 114 + 500) / 1000
 			r = g = b = average
 
-		r += @options.r
-		g += @options.g
-		b += @options.b
+		r += @__options.r
+		g += @__options.g
+		b += @__options.b
 
-		if @options.opposite
+		if @__options.opposite
 			r = 255 - r
 			g = 255 - g
 			b = 255 - b
 
-		a *= @options.alpha
+		a *= @__options.alpha
 		[r, g, b, a]
 
 	clone: ()=>
-		new DateType.Tone @options
+		new DataType.Tone @__options
 
 	constructor: (options)->
-		@options = {}
+		@__options = {}
 		@reset()
 		options = options or {}
 		@red options.r

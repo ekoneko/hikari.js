@@ -1,12 +1,11 @@
-class DateType.Color extends DateType
+class DataType.Color extends DataType
 
-	dataType: 'color'
+	__dataType: 'color'
 
-	options:
+	__options:
 		r: 0
 		g: 0
 		b: 0
-		alpha: 1	# 0% ~ 100%
 
 	hex2dec = (hex)=>
 		r = parseInt hex.substr(1, 2), 16
@@ -28,46 +27,37 @@ class DateType.Color extends DateType
 		Math.max min, Math.min(value, max)
 
 	getRGB: ()=>
-		"(#{@options.r}, #{@options.g}, #{@options.b})"
-
-	getRGBA: ()=>
-		"(#{@options.r}, #{@options.g}, #{options.b}, #{options.alpha})"
+		"(#{@__options.r}, #{@__options.g}, #{@__options.b})"
 
 	red: (r)=>
 		if typeof r is 'number'
-			@options.r = scope r, 0, 255
-		@options.r
+			@__options.r = scope r, 0, 255
+		@__options.r
 
 	green: (g)=>
 		if typeof g is 'number'
-			@options.g = scope g, 0, 255
-		@options.g
+			@__options.g = scope g, 0, 255
+		@__options.g
 
 	blue: (b)=>
 		if typeof b is 'number'
-			@options.b = scope b, 0, 255
-		@options.b
+			@__options.b = scope b, 0, 255
+		@__options.b
 
 	hex: (hex)=>
 		if hex and /#[0-9A-Fa-f]{6}/.test(hex)
 			@set hex
 			return hex
-		dec2hex @options.r, @options.g, @options.b
-
-	alpha: (a)=>
-		if typeof a is 'number'
-			@options.alpha = scope a, 0, 1
-		@options.alpha
+		dec2hex @__options.r, @__options.g, @__options.b
 
 	set: (color, value)=>
 		if typeof color is 'object'
 			@red(color.r or color.R)
 			@green(color.g or color.G)
 			@blue(color.b or color.B)
-			@alpha color.alpha
 		else
 			color = color.toLocaleLowerCase()
-			if ['r', 'g', 'b', 'alpha'].indexOf(color) isnt -1
+			if ['r', 'g', 'b'].indexOf(color) isnt -1
 				this[color] value
 			else if color is '#' and /#[0-9A-Fa-f]{6}/.test(color)
 				rgb = hex2dec color
@@ -75,14 +65,13 @@ class DateType.Color extends DateType
 		this
 
 	clone: ()=>
-		new DateType.Color @options
+		new DataType.Color @__options
 
-	constructor: (r, g, b, a) ->
-		@options =
+	constructor: (r, g, b) ->
+		@__options =
 			r: 0
 			g: 0
 			b: 0
-			alpha: 1
 
 		if r[0] is '#'
 			@set r
@@ -91,4 +80,3 @@ class DateType.Color extends DateType
 				r: r
 				g: g
 				b: b
-			@alpha = a if typeof a is 'number'

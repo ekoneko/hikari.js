@@ -1,6 +1,9 @@
 class Draw.Sprite extends Draw
-	drawType: 'sprite'
+	
+	__drawType: 'sprite'
+
 	zAutoIncrement = 0
+
 	__tone: null	# Tone
 	__list: []
 	__canvas: null
@@ -67,13 +70,13 @@ class Draw.Sprite extends Draw
 
 
 	tone: (t)=>
-		if t and t.type is 'datetype' and t.dataType is 'tone'
+		if t and t.type() is 'datatype' and t.dataType() is 'tone'
 			@__tone = t
 			@__toneChanged = on
 		@__tone
 
 	append: (image)=>
-		return if image.type isnt 'draw' and image.drawType is 'sprite'
+		return if image.type() isnt 'draw' and image.drawType() is 'sprite'
 		@__width = image.width() + image.x() unless @__width
 		@__height = image.height() + image.y() unless @__height
 		@z zAutoIncrement++
@@ -118,11 +121,11 @@ class Draw.Sprite extends Draw
 		fps = options.fps or 30
 		fps += fps % 2
 
-		if options.color and options.color.dateType and
-		options.colordateType is 'color'
+		if options.color and options.color.dataType and
+		options.colordataType() is 'color'
 			@__blinkRGB = options.color
 		else
-			@__blinkRGB = new DateType.Color 3, 3, 3
+			@__blinkRGB = new DataType.Color 3, 3, 3
 		@__blinkCount = times * fps
 		@__blinkFps = fps
 		@__blinkTone =  null

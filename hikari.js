@@ -1,5 +1,5 @@
 (function() {
-  var Audio, DateType, Draw, Event, HTML, Keyboard, Mouse, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
+  var Audio, DataType, Draw, Event, HTML, Keyboard, Mouse, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -8,7 +8,7 @@
     var global,
       _this = this;
 
-    Hikari.prototype.type = 'hikari';
+    Hikari.prototype.__type = 'hikari';
 
     Hikari.prototype.__delay = null;
 
@@ -20,7 +20,7 @@
       Hikari.Audio = Audio;
       Hikari.Draw = Draw;
       Hikari.HTML = HTML;
-      Hikari.DateType = DateType;
+      Hikari.DataType = DataType;
       Hikari.Vector = Vector;
       Hikari.Event = Event;
       Hikari.Keyboard = Keyboard;
@@ -28,13 +28,16 @@
       return Hikari.NetWork = Network;
     };
 
-    Hikari.prototype.init = function() {
+    Hikari.prototype.__init = function() {
+      global();
       return this.__delay = function(callback) {
         return setTimeout(function() {
           return callback();
         }, this.times);
       };
     };
+
+    Hikari.prototype.__loadResources = function() {};
 
     Hikari.prototype.update = function() {
       this.stage.update();
@@ -43,11 +46,13 @@
 
     function Hikari(container, width, height, callback) {
       this.update = __bind(this.update, this);
-      this.init = __bind(this.init, this);      this.fps = 30;
+      this.__loadResources = __bind(this.__loadResources, this);
+      this.__init = __bind(this.__init, this);      this.__delay = null;
+      this.fps = 30;
       this.times = 1000 / 30;
-      global();
-      this.init();
+      this.__init();
       this.stage = new Stage(width, height, container);
+      this.__loadResources();
       this.update();
       if (typeof callback === 'function') {
         callback(this);
@@ -63,9 +68,12 @@
       this.destroy = __bind(this.destroy, this);
       this.set = __bind(this.set, this);
       this.get = __bind(this.get, this);
+      this.type = __bind(this.type, this);
     }
 
-    Object.prototype.type = 'object';
+    Object.prototype.type = function() {
+      return this.__type || 'object';
+    };
 
     Object.prototype.get = function(key) {
       return this[key];
@@ -97,24 +105,29 @@
 
   })();
 
-  DateType = (function(_super) {
-    __extends(DateType, _super);
+  DataType = (function(_super) {
+    __extends(DataType, _super);
 
-    function DateType() {
-      this.clone = __bind(this.clone, this);      _ref = DateType.__super__.constructor.apply(this, arguments);
+    function DataType() {
+      this.clone = __bind(this.clone, this);
+      this.dataType = __bind(this.dataType, this);      _ref = DataType.__super__.constructor.apply(this, arguments);
       return _ref;
     }
 
-    DateType.prototype.type = 'datetype';
+    DataType.prototype.__type = 'datatype';
 
-    DateType.prototype.dataType = '';
+    DataType.prototype.__options = {};
 
-    DateType.prototype.clone = function(dest, src) {
-      dest.options = src.options;
+    DataType.prototype.dataType = function() {
+      return this.__dataType;
+    };
+
+    DataType.prototype.clone = function(dest, src) {
+      dest.__options = src.__options;
       return dest;
     };
 
-    return DateType;
+    return DataType;
 
   })(Object);
 
@@ -131,11 +144,12 @@
       this.width = __bind(this.width, this);
       this.z = __bind(this.z, this);
       this.y = __bind(this.y, this);
-      this.x = __bind(this.x, this);      _ref1 = Draw.__super__.constructor.apply(this, arguments);
+      this.x = __bind(this.x, this);
+      this.drawType = __bind(this.drawType, this);      _ref1 = Draw.__super__.constructor.apply(this, arguments);
       return _ref1;
     }
 
-    Draw.prototype.type = 'draw';
+    Draw.prototype.__type = 'draw';
 
     Draw.prototype.__x = 0;
 
@@ -148,6 +162,10 @@
     Draw.prototype.__height = 0;
 
     Draw.prototype.__options = {};
+
+    Draw.prototype.drawType = function() {
+      return this.__drawType;
+    };
 
     Draw.prototype.x = function(x) {
       if (typeof x === 'number') {
@@ -234,11 +252,12 @@
     function HTML() {
       this.build = __bind(this.build, this);
       this.remove = __bind(this.remove, this);
-      this.append = __bind(this.append, this);      _ref2 = HTML.__super__.constructor.apply(this, arguments);
+      this.append = __bind(this.append, this);
+      this.htmlType = __bind(this.htmlType, this);      _ref2 = HTML.__super__.constructor.apply(this, arguments);
       return _ref2;
     }
 
-    HTML.prototype.type = 'html';
+    HTML.prototype.__type = 'html';
 
     HTML.prototype.tag = null;
 
@@ -248,7 +267,14 @@
 
     HTML.prototype.onStage = false;
 
-    HTML.prototype.append = function() {
+    HTML.prototype.htmlType = function() {
+      return this.__htmlType;
+    };
+
+    HTML.prototype.append = function(stage) {
+      if (stage && stage.type === 'stage') {
+        this.stage = stage;
+      }
       this.stage.box.appendChild(this.element);
       return this.onStage = true;
     };
@@ -295,6 +321,8 @@
 
     list = [];
 
+    Stage.prototype.__type = 'stage';
+
     Stage.prototype.box = null;
 
     Stage.prototype.canvas = null;
@@ -305,14 +333,12 @@
 
     Stage.prototype.height = 0;
 
-    Stage.prototype.type = 'stage';
-
     Stage.prototype.append = function(o) {
-      if (o.type !== 'draw') {
+      if (o.type() !== 'draw') {
         console.log('error: object cannt append to canvas', o);
         return;
       }
-      if (['bitmap', 'sprite'].indexOf(o.drawType > -1)) {
+      if (['bitmap', 'sprite'].indexOf(o.drawType() > -1)) {
         list.push(o);
       }
       return o.draw(this);
@@ -368,11 +394,16 @@
     __extends(Vector, _super);
 
     function Vector() {
-      this.setOptions = __bind(this.setOptions, this);      _ref3 = Vector.__super__.constructor.apply(this, arguments);
+      this.setOptions = __bind(this.setOptions, this);
+      this.vectorType = __bind(this.vectorType, this);      _ref3 = Vector.__super__.constructor.apply(this, arguments);
       return _ref3;
     }
 
-    Vector.prototype.vectorType = '';
+    Vector.prototype.__type = 'vector';
+
+    Vector.prototype.vectorType = function() {
+      return this.__vectorType;
+    };
 
     Vector.prototype.setOptions = function(_options) {
       var key;
@@ -389,19 +420,18 @@
 
   })(Object);
 
-  DateType.Color = (function(_super) {
+  DataType.Color = (function(_super) {
     var dec2hex, hex2dec, scope,
       _this = this;
 
     __extends(Color, _super);
 
-    Color.prototype.dataType = 'color';
+    Color.prototype.__dataType = 'color';
 
-    Color.prototype.options = {
+    Color.prototype.__options = {
       r: 0,
       g: 0,
-      b: 0,
-      alpha: 1
+      b: 0
     };
 
     hex2dec = function(hex) {
@@ -432,32 +462,28 @@
     };
 
     Color.prototype.getRGB = function() {
-      return "(" + this.options.r + ", " + this.options.g + ", " + this.options.b + ")";
-    };
-
-    Color.prototype.getRGBA = function() {
-      return "(" + this.options.r + ", " + this.options.g + ", " + options.b + ", " + options.alpha + ")";
+      return "(" + this.__options.r + ", " + this.__options.g + ", " + this.__options.b + ")";
     };
 
     Color.prototype.red = function(r) {
       if (typeof r === 'number') {
-        this.options.r = scope(r, 0, 255);
+        this.__options.r = scope(r, 0, 255);
       }
-      return this.options.r;
+      return this.__options.r;
     };
 
     Color.prototype.green = function(g) {
       if (typeof g === 'number') {
-        this.options.g = scope(g, 0, 255);
+        this.__options.g = scope(g, 0, 255);
       }
-      return this.options.g;
+      return this.__options.g;
     };
 
     Color.prototype.blue = function(b) {
       if (typeof b === 'number') {
-        this.options.b = scope(b, 0, 255);
+        this.__options.b = scope(b, 0, 255);
       }
-      return this.options.b;
+      return this.__options.b;
     };
 
     Color.prototype.hex = function(hex) {
@@ -465,14 +491,7 @@
         this.set(hex);
         return hex;
       }
-      return dec2hex(this.options.r, this.options.g, this.options.b);
-    };
-
-    Color.prototype.alpha = function(a) {
-      if (typeof a === 'number') {
-        this.options.alpha = scope(a, 0, 1);
-      }
-      return this.options.alpha;
+      return dec2hex(this.__options.r, this.__options.g, this.__options.b);
     };
 
     Color.prototype.set = function(color, value) {
@@ -482,10 +501,9 @@
         this.red(color.r || color.R);
         this.green(color.g || color.G);
         this.blue(color.b || color.B);
-        this.alpha(color.alpha);
       } else {
         color = color.toLocaleLowerCase();
-        if (['r', 'g', 'b', 'alpha'].indexOf(color) !== -1) {
+        if (['r', 'g', 'b'].indexOf(color) !== -1) {
           this[color](value);
         } else if (color === '#' && /#[0-9A-Fa-f]{6}/.test(color)) {
           rgb = hex2dec(color);
@@ -500,23 +518,20 @@
     };
 
     Color.prototype.clone = function() {
-      return new DateType.Color(this.options);
+      return new DataType.Color(this.__options);
     };
 
-    function Color(r, g, b, a) {
+    function Color(r, g, b) {
       this.clone = __bind(this.clone, this);
       this.set = __bind(this.set, this);
-      this.alpha = __bind(this.alpha, this);
       this.hex = __bind(this.hex, this);
       this.blue = __bind(this.blue, this);
       this.green = __bind(this.green, this);
       this.red = __bind(this.red, this);
-      this.getRGBA = __bind(this.getRGBA, this);
-      this.getRGB = __bind(this.getRGB, this);      this.options = {
+      this.getRGB = __bind(this.getRGB, this);      this.__options = {
         r: 0,
         g: 0,
-        b: 0,
-        alpha: 1
+        b: 0
       };
       if (r[0] === '#') {
         this.set(r);
@@ -526,25 +541,22 @@
           g: g,
           b: b
         });
-        if (typeof a === 'number') {
-          this.alpha = a;
-        }
       }
     }
 
     return Color;
 
-  }).call(this, DateType);
+  }).call(this, DataType);
 
-  DateType.Tone = (function(_super) {
+  DataType.Tone = (function(_super) {
     var scope,
       _this = this;
 
     __extends(Tone, _super);
 
-    Tone.prototype.dataType = 'tone';
+    Tone.prototype.__dataType = 'tone';
 
-    Tone.prototype.options = {
+    Tone.prototype.__options = {
       r: 0,
       g: 0,
       b: 0,
@@ -562,42 +574,42 @@
 
     Tone.prototype.red = function(r) {
       if (typeof r === 'number') {
-        this.options.r = scope(r, -255, 255);
+        this.__options.r = scope(r, -255, 255);
         this.noChange = false;
       }
-      return this.options.r;
+      return this.__options.r;
     };
 
     Tone.prototype.green = function(g) {
       if (typeof g === 'number') {
-        this.options.g = scope(g, -255, 255);
+        this.__options.g = scope(g, -255, 255);
         this.noChange = false;
       }
-      return this.options.g;
+      return this.__options.g;
     };
 
     Tone.prototype.blue = function(b) {
       if (typeof b === 'number') {
-        this.options.b = scope(b, -255, 255);
+        this.__options.b = scope(b, -255, 255);
         this.noChange = false;
       }
-      return this.options.b;
+      return this.__options.b;
     };
 
     Tone.prototype.alpha = function(a) {
       if (typeof a === 'number') {
-        this.options.alpha = scope(a, 0, 1);
+        this.__options.alpha = scope(a, 0, 1);
         this.noChange = false;
       }
-      return this.options.alpha;
+      return this.__options.alpha;
     };
 
     Tone.prototype.transparent = function(t) {
-      if (t && t.dataType && t.dataType === 'color') {
-        this.options.transparent = t;
+      if (t && t.dataType && t.dataType() === 'color') {
+        this.__options.transparent = t;
         this.noChange = false;
       }
-      return this.options.transparent;
+      return this.__options.transparent;
     };
 
     Tone.prototype.rgb = function(r, g, b) {
@@ -613,10 +625,10 @@
 
     Tone.prototype.gray = function(gray) {
       if (gray) {
-        this.options.gray = !!gray;
+        this.__options.gray = !!gray;
         this.noChange = false;
       }
-      return this.options.gray;
+      return this.__options.gray;
     };
 
     Tone.prototype.opposite = function(opposite) {
@@ -628,40 +640,40 @@
     };
 
     Tone.prototype.reset = function() {
-      this.options.r = this.options.g = this.options.b = 0;
-      this.options.gray = false;
-      this.options.opposite = false;
-      this.options.alpha = 1;
-      this.options.transparent = null;
+      this.__options.r = this.__options.g = this.__options.b = 0;
+      this.__options.gray = false;
+      this.__options.opposite = false;
+      this.__options.alpha = 1;
+      this.__options.transparent = null;
       return this.noChange = true;
     };
 
     Tone.prototype.mix = function(r, g, b, a) {
       var average;
 
-      if (this.options.transparent && a > 0) {
-        if (r === this.options.transparent.red() && g === this.options.transparent.green() && b === this.options.transparent.blue()) {
+      if (this.__options.transparent && a > 0) {
+        if (r === this.__options.transparent.red() && g === this.__options.transparent.green() && b === this.__options.transparent.blue()) {
           return [r, g, b, 0];
         }
       }
-      if (this.options.gray) {
+      if (this.__options.gray) {
         average = (r * 299 + g * 587 + b * 114 + 500) / 1000;
         r = g = b = average;
       }
-      r += this.options.r;
-      g += this.options.g;
-      b += this.options.b;
-      if (this.options.opposite) {
+      r += this.__options.r;
+      g += this.__options.g;
+      b += this.__options.b;
+      if (this.__options.opposite) {
         r = 255 - r;
         g = 255 - g;
         b = 255 - b;
       }
-      a *= this.options.alpha;
+      a *= this.__options.alpha;
       return [r, g, b, a];
     };
 
     Tone.prototype.clone = function() {
-      return new DateType.Tone(this.options);
+      return new DataType.Tone(this.__options);
     };
 
     function Tone(options) {
@@ -675,7 +687,7 @@
       this.alpha = __bind(this.alpha, this);
       this.blue = __bind(this.blue, this);
       this.green = __bind(this.green, this);
-      this.red = __bind(this.red, this);      this.options = {};
+      this.red = __bind(this.red, this);      this.__options = {};
       this.reset();
       options = options || {};
       this.red(options.r);
@@ -689,12 +701,12 @@
 
     return Tone;
 
-  }).call(this, DateType);
+  }).call(this, DataType);
 
   Draw.Bitmap = (function(_super) {
     __extends(Bitmap, _super);
 
-    Bitmap.prototype.drawType = 'bitmap';
+    Bitmap.prototype.__drawType = 'bitmap';
 
     Bitmap.prototype.__isDisposed = true;
 
@@ -707,8 +719,6 @@
       sourceY: 0,
       sourceWidth: 0,
       sourceHeight: 0,
-      transX: 0,
-      transY: 0,
       scaleX: 1,
       scaleY: 1,
       alpha: 1,
@@ -758,7 +768,6 @@
       }
       this.__context.globalAlpha = this.__options.alpha;
       this.__context.scale(this.__options.scaleX, this.__options.scaleY);
-      this.__context.transform(this.__options.transX, this.__options.transY);
       this.__context.rotate(this.__options.rotate);
       return this.__context.drawImage(this.entity, this.__options.sourceX, this.__options.sourceY, this.__options.sourceWidth, this.__options.sourceHeight, this.__x, this.__y, this.__width, this.__height);
     };
@@ -775,8 +784,16 @@
       return Bitmap.__super__.destroy.call(this);
     };
 
-    Bitmap.prototype.reset = function() {
-      return this.__options = {
+    function Bitmap(width, height) {
+      this.destroy = __bind(this.destroy, this);
+      this.dispose = __bind(this.dispose, this);
+      this.update = __bind(this.update, this);
+      this.clone = __bind(this.clone, this);
+      this.draw = __bind(this.draw, this);
+      this.load = __bind(this.load, this);
+      var nextUpdate;
+
+      this.__options = {
         sourceX: 0,
         sourceY: 0,
         sourceWidth: 0,
@@ -788,19 +805,6 @@
         alpha: 1,
         rotate: 0
       };
-    };
-
-    function Bitmap(width, height) {
-      this.reset = __bind(this.reset, this);
-      this.destroy = __bind(this.destroy, this);
-      this.dispose = __bind(this.dispose, this);
-      this.update = __bind(this.update, this);
-      this.clone = __bind(this.clone, this);
-      this.draw = __bind(this.draw, this);
-      this.load = __bind(this.load, this);
-      var nextUpdate;
-
-      this.__options = {};
       this.entity = null;
       this.__context = null;
       this.reset();
@@ -818,7 +822,7 @@
 
     __extends(Sprite, _super);
 
-    Sprite.prototype.drawType = 'sprite';
+    Sprite.prototype.__drawType = 'sprite';
 
     zAutoIncrement = 0;
 
@@ -912,7 +916,7 @@
     };
 
     Sprite.prototype.tone = function(t) {
-      if (t && t.type === 'datetype' && t.dataType === 'tone') {
+      if (t && t.type() === 'datatype' && t.dataType() === 'tone') {
         this.__tone = t;
         this.__toneChanged = true;
       }
@@ -920,7 +924,7 @@
     };
 
     Sprite.prototype.append = function(image) {
-      if (image.type !== 'draw' && image.drawType === 'sprite') {
+      if (image.type() !== 'draw' && image.drawType() === 'sprite') {
         return;
       }
       if (!this.__width) {
@@ -988,10 +992,10 @@
       times = options.times || 2;
       fps = options.fps || 30;
       fps += fps % 2;
-      if (options.color && options.color.dateType && options.colordateType === 'color') {
+      if (options.color && options.color.dataType && options.colordataType() === 'color') {
         this.__blinkRGB = options.color;
       } else {
-        this.__blinkRGB = new DateType.Color(3, 3, 3);
+        this.__blinkRGB = new DataType.Color(3, 3, 3);
       }
       this.__blinkCount = times * fps;
       this.__blinkFps = fps;
@@ -1043,7 +1047,7 @@
   Draw.Vector = (function(_super) {
     __extends(Vector, _super);
 
-    Vector.prototype.drawType = 'vector';
+    Vector.prototype.__drawType = 'vector';
 
     Vector.prototype.__isDisposed = true;
 
@@ -1055,6 +1059,15 @@
     };
 
     Vector.prototype.vector = [];
+
+    Vector.prototype.__updateLine = function(vector) {
+      this.__context.moveTo(vector.options.start.x, vector.options.start.y);
+      return this.__context.lineTo(vector.options.end.x, vector.options.end.y);
+    };
+
+    Vector.prototype.__updateRect = function(vector) {
+      return this.__context.rect(vector.options.start.x, vector.options.start.y, vector.options.width, vector.options.height);
+    };
 
     Vector.prototype.draw = function(stage) {
       if (stage) {
@@ -1074,7 +1087,7 @@
       _ref4 = this.vector;
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         vector = _ref4[_i];
-        switch (vector.vectorType) {
+        switch (vector.vectorType()) {
           case 'line':
             this.__updateLine(vector);
             break;
@@ -1090,17 +1103,8 @@
       return this.__context.stroke();
     };
 
-    Vector.prototype.__updateLine = function(vector) {
-      this.__context.moveTo(vector.options.start.x, vector.options.start.y);
-      return this.__context.lineTo(vector.options.end.x, vector.options.end.y);
-    };
-
-    Vector.prototype.__updateRect = function(vector) {
-      return this.__context.rect(vector.options.start.x, vector.options.start.y, vector.options.width, vector.options.height);
-    };
-
     Vector.prototype.append = function(v) {
-      if (v.vectorType) {
+      if (v.type() === 'vector') {
         this.vector.push(v);
       }
       return this;
@@ -1108,10 +1112,10 @@
 
     function Vector() {
       this.append = __bind(this.append, this);
-      this.__updateRect = __bind(this.__updateRect, this);
-      this.__updateLine = __bind(this.__updateLine, this);
       this.update = __bind(this.update, this);
-      this.draw = __bind(this.draw, this);      this.__options = {
+      this.draw = __bind(this.draw, this);
+      this.__updateRect = __bind(this.__updateRect, this);
+      this.__updateLine = __bind(this.__updateLine, this);      this.__options = {
         lineWidth: 1,
         strokeStyle: 'black',
         lineCap: 'butt',
@@ -1124,13 +1128,11 @@
   })(Draw);
 
   HTML.BLOCK = (function(_super) {
-    var attribute, style;
-
     __extends(BLOCK, _super);
 
-    BLOCK.prototype.htmlType = 'block';
+    BLOCK.prototype.__htmlType = 'block';
 
-    attribute = {
+    BLOCK.prototype.__attribute = {
       x: 0,
       y: 0,
       z: 1,
@@ -1138,24 +1140,18 @@
       height: 0
     };
 
-    style = function(div) {
+    BLOCK.prototype.__style = function(div) {
       div.style.position = 'absolute';
-      div.style.left = "" + attribute.x + "px";
-      div.style.top = "" + attribute.y + "px";
-      div.style.width = "" + attribute.width + "px";
-      div.style.height = "" + attribute.height + "px";
+      div.style.left = "" + this.__attribute.x + "px";
+      div.style.top = "" + this.__attribute.y + "px";
+      div.style.width = "" + this.__attribute.width + "px";
+      div.style.height = "" + this.__attribute.height + "px";
       return div.style.zIndex = attribute.z;
     };
 
     BLOCK.prototype.build = function(options, callback) {
-      var i, _i, _len, _ref4;
-
       this.element = document.createElement('div');
-      _ref4 = ['x', 'y', 'z', 'width', 'height'];
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        i = _ref4[_i];
-        attribute[i] = options[i];
-      }
+      this.set(options);
       style(this.element);
       if (typeof options.content === 'string') {
         this.element.innerHTML = this.options.content;
@@ -1172,23 +1168,32 @@
       return BLOCK.__super__.destroy.call(this);
     };
 
-    BLOCK.prototype.set = function(options) {
+    BLOCK.prototype.options = function(options) {
       var i, _i, _len, _ref4;
 
       _ref4 = ['x', 'y', 'z', 'width', 'height'];
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         i = _ref4[_i];
         if (options[i]) {
-          attribute[i] = options[i];
+          this.__attribute[i] = options[i];
         }
       }
-      return style(this.element);
+      return this.__style(this.element);
     };
 
     function BLOCK(stage) {
-      this.set = __bind(this.set, this);
+      this.options = __bind(this.options, this);
       this.destroy = __bind(this.destroy, this);
-      this.build = __bind(this.build, this);      if (stage && stage.type === 'stage') {
+      this.build = __bind(this.build, this);
+      this.__style = __bind(this.__style, this);      this.__attribute = {
+        x: 0,
+        y: 0,
+        z: 1,
+        width: 0,
+        height: 0
+      };
+      this.stage = null;
+      if (stage && stage.type() === 'stage') {
         this.stage = stage;
       }
     }
@@ -1198,13 +1203,11 @@
   })(HTML);
 
   HTML.IMG = (function(_super) {
-    var style;
-
     __extends(IMG, _super);
 
-    IMG.prototype.htmlType = 'img';
+    IMG.prototype.__htmlType = 'img';
 
-    IMG.prototype.attribute = {
+    IMG.prototype.__attribute = {
       x: 0,
       y: 0,
       z: 1,
@@ -1212,13 +1215,13 @@
       height: 0
     };
 
-    style = function(img, attribute) {
+    IMG.prototype.__style = function(img) {
       img.style.position = 'absolute';
-      img.style.left = "" + attribute.x + "px";
-      img.style.top = "" + attribute.y + "px";
-      img.style.zIndex = attribute.z;
-      img.width = attribute.width;
-      return img.height = attribute.height;
+      img.style.left = "" + this.__attribute.x + "px";
+      img.style.top = "" + this.__attribute.y + "px";
+      img.style.zIndex = this.__attribute.z;
+      img.width = this.__attribute.width;
+      return img.height = this.__attribute.height;
     };
 
     IMG.prototype.build = function(options, callback) {
@@ -1233,9 +1236,9 @@
       _ref4 = ['x', 'y', 'z', 'width', 'height'];
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         i = _ref4[_i];
-        this.attribute[i] = options[i];
+        this.__attribute[i] = options[i];
       }
-      style(this.element, this.attribute);
+      this.__style(this.element);
       return this.element.src = options.src;
     };
 
@@ -1251,16 +1254,18 @@
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         i = _ref4[_i];
         if (options[i]) {
-          this.attribute[i] = options[i];
+          this.__attribute[i] = options[i];
         }
       }
-      return style(this.element);
+      return this.__style(this.element);
     };
 
     function IMG(stage) {
       this.set = __bind(this.set, this);
       this.destroy = __bind(this.destroy, this);
-      this.build = __bind(this.build, this);      if (stage && stage.type === 'stage') {
+      this.build = __bind(this.build, this);
+      this.__style = __bind(this.__style, this);      this.stage = null;
+      if (stage && stage.type() === 'stage') {
         this.stage = stage;
       }
     }
@@ -1272,7 +1277,7 @@
   Vector.Line = (function(_super) {
     __extends(Line, _super);
 
-    Line.prototype.vectorType = 'line';
+    Line.prototype.__vectorType = 'line';
 
     Line.prototype.options = {
       start: {
@@ -1298,7 +1303,7 @@
   Vector.Rect = (function(_super) {
     __extends(Rect, _super);
 
-    Rect.prototype.vectorType = 'rect';
+    Rect.prototype.__vectorType = 'rect';
 
     Rect.prototype.options = {
       start: {

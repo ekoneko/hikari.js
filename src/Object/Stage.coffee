@@ -1,17 +1,19 @@
 class Stage extends Object
+
 	list = []
+	__type: 'stage'
+
 	box: null
 	canvas: null
 	context: null
 	width: 0
 	height: 0
-	type: 'stage'
 
 	append: (o)=>
-		unless o.type is 'draw'
+		unless o.type() is 'draw'
 			console.log 'error: object cannt append to canvas', o
 			return
-		list.push o if ['bitmap', 'sprite'].indexOf o.drawType > -1
+		list.push o if ['bitmap', 'sprite'].indexOf o.drawType() > -1
 		o.draw this
 
 	update: ()=>

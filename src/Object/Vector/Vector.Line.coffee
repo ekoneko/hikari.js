@@ -1,6 +1,6 @@
 class Vector.Line extends Vector
 
-	vectorType: 'line'
+	__vectorType: 'line'
 	options:
 		start:
 			x: 0

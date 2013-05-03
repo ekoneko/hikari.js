@@ -1,5 +1,6 @@
 class Draw.Bitmap extends Draw
-	drawType: 'bitmap'
+
+	__drawType: 'bitmap'
 	__isDisposed: on
 	entity: null
 	__context: null
@@ -9,8 +10,6 @@ class Draw.Bitmap extends Draw
 		sourceY: 0
 		sourceWidth: 0
 		sourceHeight: 0
-		transX: 0
-		transY: 0
 		scaleX: 1
 		scaleY: 1
 		alpha: 1
@@ -40,7 +39,6 @@ class Draw.Bitmap extends Draw
 		return off unless @__isDisposed and @__context
 		@__context.globalAlpha = @__options.alpha
 		@__context.scale @__options.scaleX, @__options.scaleY
-		@__context.transform @__options.transX, @__options.transY
 		@__context.rotate @__options.rotate
 		@__context.drawImage @entity,
 			@__options.sourceX, @__options.sourceY,
@@ -56,7 +54,7 @@ class Draw.Bitmap extends Draw
 		delete @entity
 		super()
 
-	reset: ()=>
+	constructor: (width, height)->
 		@__options =
 			sourceX: 0
 			sourceY: 0
@@ -68,9 +66,6 @@ class Draw.Bitmap extends Draw
 			scaleY: 1
 			alpha: 1
 			rotate: 0
-
-	constructor: (width, height)->
-		@__options = {}
 		@entity = null
 		@__context = null
 		@reset()

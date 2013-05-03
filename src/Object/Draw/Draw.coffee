@@ -1,5 +1,6 @@
 class Draw extends Object
-	type: 'draw'
+
+	__type: 'draw'
 
 	__x: 0
 	__y: 0
@@ -7,6 +8,9 @@ class Draw extends Object
 	__width: 0
 	__height: 0
 	__options: {}
+
+	drawType: ()=>
+		@__drawType
 
 	x: (x)=>
 		if typeof x is 'number'

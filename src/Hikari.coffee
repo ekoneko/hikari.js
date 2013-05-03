@@ -1,24 +1,32 @@
 class @Hikari
-	type: 'hikari'
+
+	__type: 'hikari'
 	__delay: null
+	
 	times: 0
 	fps: 0
+
+	# global variable initialization
 	global = =>
 		@Audio		= Audio
 		@Draw		= Draw
 		@HTML		= HTML
-		@DateType	= DateType
+		@DataType	= DataType
 		@Vector		= Vector
 		@Event		= Event
 		@Keyboard	= Keyboard
 		@Mouse		= Mouse
 		@NetWork	= Network
 
-	init: =>
+	__init: =>
+		global()
 		@__delay = (callback)->
 			setTimeout ()->
 				callback()
 			, @times
+
+	__loadResources: =>
+		# TODO
 
 	update: ()=>
 		@stage.update()
@@ -26,18 +34,18 @@ class @Hikari
 			
 
 	constructor: (container, width, height, callback)->
+		@__delay = null
 		@fps = 30
 		@times = 1000 / 30
 
-		# 设置全局变量
-		global()
-		# 初始化
-		@init()
-		# 创建一个Stage(绘制canvas)
-		@stage = new Stage width, height, container
-		# 加载资源
+		@__init()
 
-		# 刷新
+		# Draw Stage
+		@stage = new Stage width, height, container
+
+		# load resources
+		@__loadResources()
+
 		@update()
 
 		callback this if typeof callback is 'function'

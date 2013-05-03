@@ -1,6 +1,7 @@
 class Object
 
-	type: 'object'
+	type: ()=>
+		@__type or 'object'
 
 	get: (key)=>
 		this[key]
