@@ -1,5 +1,5 @@
 (function() {
-  var Audio, DataType, Draw, Event, HTML, Keyboard, Mouse, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
+  var Audio, DataType, Draw, Event, HTML, Keyboard, Mouse, Network, Object, Stage, Store, Unit, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -358,9 +358,10 @@
       return _results;
     };
 
-    function Stage(width, height, container, callback) {
+    function Stage(width, height, container) {
       this.update = __bind(this.update, this);
-      this.append = __bind(this.append, this);      this.width = width;
+      this.append = __bind(this.append, this);      list = [];
+      this.width = width;
       this.height = height;
       this.canvas = document.createElement('canvas');
       this.canvas.width = width;
@@ -387,6 +388,13 @@
     function Store() {}
 
     return Store;
+
+  })();
+
+  Unit = (function() {
+    function Unit() {}
+
+    return Unit;
 
   })();
 
@@ -1273,6 +1281,29 @@
     return IMG;
 
   })(HTML);
+
+  Vector.Circle = (function(_super) {
+    __extends(Circle, _super);
+
+    Circle.prototype.__vectorType = 'circle';
+
+    Circle.prototype.options = {
+      origin: {
+        x: 0,
+        y: 0
+      },
+      radius: 0
+    };
+
+    function Circle(origin, radius) {
+      this.options = {};
+      this.options.origin = origin;
+      this.options.radius = radius;
+    }
+
+    return Circle;
+
+  })(Vector);
 
   Vector.Line = (function(_super) {
     __extends(Line, _super);
