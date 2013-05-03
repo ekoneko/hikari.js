@@ -22,7 +22,8 @@ class Stage extends Object
 		@context.clearRect 0, 0, @width, @height
 		item.update() for item in list
 
-	constructor: (width, height, container, callback)->
+	constructor: (width, height, container)->
+		list = []
 		@width = width
 		@height = height
 		@canvas = document.createElement 'canvas'
