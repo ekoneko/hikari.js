@@ -1,14 +1,15 @@
 class Draw.Vector extends Draw
 
-	__drawType: 'vector'
 	# TIPS: about strokeStyle:
 	# 	http://www.w3schools.com/tags/canvas_strokestyle.asp
+	__drawType: 'vector'
 	__isDisposed: on
 	__options:
 		lineWidth: 1
 		strokeStyle: 'black' # color|gradient|pattern
 		lineCap: 'butt'
 		fillStyle: 'black'
+
 	vector: []
 
 	__updateLine: (vector)=>

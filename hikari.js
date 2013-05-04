@@ -1,5 +1,5 @@
 (function() {
-  var Audio, DataType, Draw, Event, HTML, Keyboard, Mouse, Network, Object, Stage, Store, Unit, Vector, _ref, _ref1, _ref2, _ref3,
+  var Audio, DataType, Draw, Event, HTML, Input, Network, Object, Stage, Store, Unit, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -22,9 +22,8 @@
       Hikari.HTML = HTML;
       Hikari.DataType = DataType;
       Hikari.Vector = Vector;
+      Hikari.Input = Input;
       Hikari.Event = Event;
-      Hikari.Keyboard = Keyboard;
-      Hikari.Mouse = Mouse;
       return Hikari.NetWork = Network;
     };
 
@@ -41,6 +40,7 @@
 
     Hikari.prototype.update = function() {
       this.stage.update();
+      this.input.update();
       return this.__delay(this.update);
     };
 
@@ -52,6 +52,7 @@
       this.times = 1000 / 30;
       this.__init();
       this.stage = new Stage(width, height, container);
+      this.input = new Input(this.stage);
       this.__loadResources();
       this.update();
       if (typeof callback === 'function') {
@@ -239,12 +240,18 @@
 
   })(Object);
 
-  Event = (function() {
+  Event = (function(_super) {
+    __extends(Event, _super);
+
+    Event.prototype.__type = 'event';
+
+    Event.prototype.eventType = '';
+
     function Event() {}
 
     return Event;
 
-  })();
+  })(Object);
 
   HTML = (function(_super) {
     __extends(HTML, _super);
@@ -293,19 +300,26 @@
 
   })(Object);
 
-  Keyboard = (function() {
-    function Keyboard() {}
+  Input = (function(_super) {
+    __extends(Input, _super);
 
-    return Keyboard;
+    Input.prototype.update = function() {
+      if (this.mouse.trigger) {
+        this.mouse.trigger = null;
+      }
+      if (this.keyboard.trigger) {
+        return this.keyboard.trigger = null;
+      }
+    };
 
-  })();
+    function Input(stage) {
+      this.update = __bind(this.update, this);      this.keyboard = new Input.Keyboard(stage.box);
+      this.mouse = new Input.Mouse(stage.box);
+    }
 
-  Mouse = (function() {
-    function Mouse() {}
+    return Input;
 
-    return Mouse;
-
-  })();
+  })(Object);
 
   Network = (function() {
     function Network() {}
@@ -391,12 +405,42 @@
 
   })();
 
-  Unit = (function() {
-    function Unit() {}
+  Unit = (function(_super) {
+    __extends(Unit, _super);
+
+    Unit.prototype.__type = 'unit';
+
+    Unit.prototype.scope = null;
+
+    Unit.prototype.sprite = null;
+
+    Unit.prototype.event = [];
+
+    Unit.prototype.addEvent = function(event) {
+      if (event.type() === 'event') {
+        this.event.push(event);
+        return true;
+      }
+      return false;
+    };
+
+    Unit.prototype.move = function(x, y) {
+      if (this.sprite) {
+        this.sprite.x(this.sprite.x() + x);
+        return this.sprite.y(this.sprite.y() + y);
+      }
+    };
+
+    function Unit(options) {
+      this.move = __bind(this.move, this);
+      this.addEvent = __bind(this.addEvent, this);      this.scope = this.sprite = null;
+      this.event = [];
+      this.set(options);
+    }
 
     return Unit;
 
-  })();
+  })(Object);
 
   Vector = (function(_super) {
     __extends(Vector, _super);
@@ -718,8 +762,6 @@
 
     Bitmap.prototype.__isDisposed = true;
 
-    Bitmap.prototype.entity = null;
-
     Bitmap.prototype.__context = null;
 
     Bitmap.prototype.__options = {
@@ -732,6 +774,8 @@
       alpha: 1,
       rotate: 0
     };
+
+    Bitmap.prototype.entity = null;
 
     Bitmap.prototype.load = function(src, callback) {
       var _this = this;
@@ -815,7 +859,6 @@
       };
       this.entity = null;
       this.__context = null;
-      this.reset();
       this.width(width);
       this.height(height);
       nextUpdate = this.frequency;
@@ -1281,6 +1324,35 @@
     return IMG;
 
   })(HTML);
+
+  Input.Keyboard = (function(_super) {
+    __extends(Keyboard, _super);
+
+    function Keyboard(dom) {}
+
+    return Keyboard;
+
+  })(Input);
+
+  Input.Mouse = (function(_super) {
+    __extends(Mouse, _super);
+
+    Mouse.prototype.trigger = null;
+
+    function Mouse(dom) {
+      var _this = this;
+
+      dom.addEventListener('click', function(event) {
+        return _this.mouseTrigger = {
+          x: offsetX,
+          y: offsetY
+        };
+      });
+    }
+
+    return Mouse;
+
+  })(Input);
 
   Vector.Circle = (function(_super) {
     __extends(Circle, _super);

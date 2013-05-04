@@ -2,9 +2,7 @@ class Draw.Bitmap extends Draw
 
 	__drawType: 'bitmap'
 	__isDisposed: on
-	entity: null
 	__context: null
-
 	__options:
 		sourceX: 0
 		sourceY: 0
@@ -14,6 +12,8 @@ class Draw.Bitmap extends Draw
 		scaleY: 1
 		alpha: 1
 		rotate: 0
+
+	entity: null
 
 	load: (src, callback)=>
 		@entity = new Image()
@@ -68,7 +68,6 @@ class Draw.Bitmap extends Draw
 			rotate: 0
 		@entity = null
 		@__context = null
-		@reset()
 		@width width
 		@height height
 		nextUpdate = @frequency
