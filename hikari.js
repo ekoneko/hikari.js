@@ -1,5 +1,5 @@
 (function() {
-  var Audio, DataType, Draw, Event, HTML, Input, Network, Object, Stage, Store, Unit, Vector, _ref, _ref1, _ref2, _ref3,
+  var Audio, Const, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Unit, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -22,8 +22,8 @@
       Hikari.HTML = HTML;
       Hikari.DataType = DataType;
       Hikari.Vector = Vector;
-      Hikari.Input = Input;
       Hikari.Event = Event;
+      Hikari.Const = Const;
       return Hikari.NetWork = Network;
     };
 
@@ -48,11 +48,12 @@
       this.update = __bind(this.update, this);
       this.__loadResources = __bind(this.__loadResources, this);
       this.__init = __bind(this.__init, this);      this.__delay = null;
-      this.fps = 30;
+      this.fps = 60;
       this.times = 1000 / 30;
       this.__init();
       this.stage = new Stage(width, height, container);
-      this.input = new Input(this.stage);
+      this.eventMap = new EventMap(width, height);
+      this.input = new Input(this.stage, this.eventMap);
       this.__loadResources();
       this.update();
       if (typeof callback === 'function') {
@@ -105,6 +106,8 @@
     return Audio;
 
   })();
+
+  Const = {};
 
   DataType = (function(_super) {
     __extends(DataType, _super);
@@ -243,13 +246,154 @@
   Event = (function(_super) {
     __extends(Event, _super);
 
+    Event.id = 1;
+
+    Event.list = {};
+
     Event.prototype.__type = 'event';
+
+    Event.prototype.__id = 0;
+
+    Event.prototype.__action = null;
 
     Event.prototype.eventType = '';
 
-    function Event() {}
+    /*
+    	# @condition
+    	# 	keyPress:
+    	#		(int)identity
+    	#
+    	# 	hover || click
+    	# 		x
+    	#		y
+    	#		size(Rect|Circle)
+    */
+
+
+    Event.prototype.condition = null;
+
+    Event.prototype.map = null;
+
+    Event.prototype.move = function(x, y) {
+      this.x = x;
+      this.y = y;
+      if (this.map) {
+        return this.map.modify(this.__id);
+      }
+    };
+
+    Event.prototype.exec = function(params) {
+      return this.__action(params);
+    };
+
+    function Event(eventType, condition, action) {
+      this.exec = __bind(this.exec, this);
+      this.move = __bind(this.move, this);      this.map = this.condition = this.__action = null;
+      this.eventType = eventType;
+      this.condition = condition;
+      this.__action = action;
+      this.__id = Event.id++;
+      Event.list[this.__id] = this;
+    }
 
     return Event;
+
+  })(Object);
+
+  EventMap = (function(_super) {
+    __extends(EventMap, _super);
+
+    EventMap.prototype.width = 0;
+
+    EventMap.prototype.height = 0;
+
+    EventMap.prototype.keyEvent = {};
+
+    EventMap.prototype.table = [];
+
+    EventMap.prototype.__triggerKeyPress = function(keyCode) {
+      var eventId, _i, _len, _ref2, _results;
+
+      if (!this.keyEvent[keyCode]) {
+        return;
+      }
+      _ref2 = this.keyEvent[keyCode];
+      _results = [];
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        eventId = _ref2[_i];
+        _results.push(Event.list[eventId].exec());
+      }
+      return _results;
+    };
+
+    EventMap.prototype.__triggerClick = function(event) {};
+
+    EventMap.prototype.__triggerHover = function(event) {};
+
+    EventMap.prototype.register = function(event) {
+      switch (event.eventType) {
+        case 'keyPress':
+          if (!this.keyEvent[event.condition]) {
+            this.keyEvent[event.condition] = [];
+          }
+          this.keyEvent[event.condition].push(event.__id);
+          break;
+        case 'hover':
+          break;
+        case 'click':
+          break;
+      }
+    };
+
+    EventMap.prototype.revoke = function(event) {
+      switch (event.eventType) {
+        case 'keyPress':
+          return delete this.keyEvent[event.condition][event.__id];
+      }
+    };
+
+    EventMap.prototype.trigger = function(type, event) {
+      switch (type) {
+        case 'keyPress':
+          this.__triggerKeyPress(event.identity);
+          break;
+        case 'click':
+          this.__triggerClick(event);
+          break;
+        case 'hover':
+          this.__triggerHover(event);
+          break;
+      }
+    };
+
+    function EventMap(width, height, grid) {
+      this.trigger = __bind(this.trigger, this);
+      this.revoke = __bind(this.revoke, this);
+      this.register = __bind(this.register, this);
+      this.__triggerHover = __bind(this.__triggerHover, this);
+      this.__triggerClick = __bind(this.__triggerClick, this);
+      this.__triggerKeyPress = __bind(this.__triggerKeyPress, this);
+      var l, lineCount, r, rowCount, _i, _j;
+
+      this.width = width;
+      this.height = height;
+      this.keyEvent = {};
+      this.table = [];
+      grid = grid || 50;
+      lineCount = Math.ceil(width / grid);
+      rowCount = Math.ceil(height / grid);
+      for (r = _i = 0; 0 <= rowCount ? _i < rowCount : _i > rowCount; r = 0 <= rowCount ? ++_i : --_i) {
+        this.table[r] = new Array(lineCount);
+        for (l = _j = 0; 0 <= lineCount ? _j < lineCount : _j > lineCount; l = 0 <= lineCount ? ++_j : --_j) {
+          this.table[r][l] = {
+            click: [],
+            over: []
+          };
+        }
+      }
+    }
+
+    return EventMap;
 
   })(Object);
 
@@ -304,16 +448,22 @@
     __extends(Input, _super);
 
     Input.prototype.update = function() {
-      if (this.mouse.trigger) {
-        this.mouse.trigger = null;
+      if (this.mouse.click) {
+        this.eventMap.trigger('click', this.mouse.click);
+        this.mouse.click = null;
       }
-      if (this.keyboard.trigger) {
-        return this.keyboard.trigger = null;
+      if (this.mouse.position) {
+        this.eventMap.trigger('hover', this.mouse.position);
+      }
+      if (this.keyboard.press) {
+        this.eventMap.trigger('keyPress', this.keyboard.press);
+        return this.keyboard.press = null;
       }
     };
 
-    function Input(stage) {
-      this.update = __bind(this.update, this);      this.keyboard = new Input.Keyboard(stage.box);
+    function Input(stage, eventMap) {
+      this.update = __bind(this.update, this);      this.eventMap = eventMap;
+      this.keyboard = new Input.Keyboard(stage.box);
       this.mouse = new Input.Mouse(stage.box);
     }
 
@@ -329,7 +479,7 @@
   })();
 
   Stage = (function(_super) {
-    var list;
+    var list, sort;
 
     __extends(Stage, _super);
 
@@ -347,6 +497,12 @@
 
     Stage.prototype.height = 0;
 
+    sort = function(list) {
+      return list.sort(function(a, b) {
+        return a.z > b.z;
+      });
+    };
+
     Stage.prototype.append = function(o) {
       if (o.type() !== 'draw') {
         console.log('error: object cannt append to canvas', o);
@@ -359,15 +515,21 @@
     };
 
     Stage.prototype.update = function() {
-      var item, _i, _len, _results;
+      var i, item, _results;
 
       this.context.restore();
       this.context.save();
       this.context.clearRect(0, 0, this.width, this.height);
+      list = sort(list);
+      i = 0;
       _results = [];
-      for (_i = 0, _len = list.length; _i < _len; _i++) {
-        item = list[_i];
-        _results.push(item.update());
+      while (item = list[i]) {
+        if (item && item.__isDisposed) {
+          item.update();
+          _results.push(i++);
+        } else {
+          _results.push(list.splice(i, 1));
+        }
       }
       return _results;
     };
@@ -471,6 +633,425 @@
     return Vector;
 
   })(Object);
+
+  Const.KeyCode = {
+    '0': 48,
+    '1': 49,
+    '2': 50,
+    '3': 51,
+    '4': 52,
+    '5': 53,
+    '6': 54,
+    '7': 55,
+    '8': 56,
+    '9': 57,
+    'A': 65,
+    'B': 66,
+    'C': 67,
+    'D': 68,
+    'E': 69,
+    'F': 70,
+    'G': 71,
+    'H': 72,
+    'I': 73,
+    'J': 74,
+    'K': 75,
+    'L': 76,
+    'M': 77,
+    'N': 78,
+    'O': 79,
+    'P': 80,
+    'Q': 81,
+    'R': 82,
+    'S': 83,
+    'T': 84,
+    'U': 85,
+    'V': 86,
+    'W': 87,
+    'X': 88,
+    'Y': 89,
+    'Z': 90,
+    'F1': 112,
+    'F2': 113,
+    'F3': 114,
+    'F4': 115,
+    'F5': 116,
+    'F6': 117,
+    'F7': 118,
+    'F8': 119,
+    'F9': 120,
+    'F10': 121,
+    'F11': 122,
+    'F12': 123,
+    'LEFT': 37,
+    'TOP': 38,
+    'RIGHT': 39,
+    'DOWN': 40,
+    'Alt+0': 304,
+    'Alt+1': 305,
+    'Alt+2': 306,
+    'Alt+3': 307,
+    'Alt+4': 308,
+    'Alt+5': 309,
+    'Alt+6': 310,
+    'Alt+7': 311,
+    'Alt+8': 312,
+    'Alt+9': 313,
+    'Alt+A': 321,
+    'Alt+B': 322,
+    'Alt+C': 323,
+    'Alt+D': 324,
+    'Alt+E': 325,
+    'Alt+F': 326,
+    'Alt+G': 327,
+    'Alt+H': 328,
+    'Alt+I': 329,
+    'Alt+J': 330,
+    'Alt+K': 331,
+    'Alt+L': 332,
+    'Alt+M': 333,
+    'Alt+N': 334,
+    'Alt+O': 335,
+    'Alt+P': 336,
+    'Alt+Q': 337,
+    'Alt+R': 338,
+    'Alt+S': 339,
+    'Alt+T': 340,
+    'Alt+U': 341,
+    'Alt+V': 342,
+    'Alt+W': 343,
+    'Alt+X': 344,
+    'Alt+Y': 345,
+    'Alt+Z': 346,
+    'Alt+F1': 368,
+    'Alt+F2': 369,
+    'Alt+F3': 370,
+    'Alt+F4': 371,
+    'Alt+F5': 372,
+    'Alt+F6': 373,
+    'Alt+F7': 374,
+    'Alt+F8': 375,
+    'Alt+F9': 376,
+    'Alt+F10': 377,
+    'Alt+F11': 378,
+    'Alt+F12': 379,
+    'Alt+LEFT': 293,
+    'Alt+TOP': 294,
+    'Alt+RIGHT': 295,
+    'Alt+DOWN': 296,
+    'Ctrl+0': 560,
+    'Ctrl+1': 561,
+    'Ctrl+2': 562,
+    'Ctrl+3': 563,
+    'Ctrl+4': 564,
+    'Ctrl+5': 565,
+    'Ctrl+6': 566,
+    'Ctrl+7': 567,
+    'Ctrl+8': 568,
+    'Ctrl+9': 569,
+    'Ctrl+A': 577,
+    'Ctrl+B': 578,
+    'Ctrl+C': 579,
+    'Ctrl+D': 580,
+    'Ctrl+E': 581,
+    'Ctrl+F': 582,
+    'Ctrl+G': 583,
+    'Ctrl+H': 584,
+    'Ctrl+I': 585,
+    'Ctrl+J': 586,
+    'Ctrl+K': 587,
+    'Ctrl+L': 588,
+    'Ctrl+M': 589,
+    'Ctrl+N': 590,
+    'Ctrl+O': 591,
+    'Ctrl+P': 592,
+    'Ctrl+Q': 593,
+    'Ctrl+R': 594,
+    'Ctrl+S': 595,
+    'Ctrl+T': 596,
+    'Ctrl+U': 597,
+    'Ctrl+V': 598,
+    'Ctrl+W': 599,
+    'Ctrl+X': 600,
+    'Ctrl+Y': 601,
+    'Ctrl+Z': 602,
+    'Ctrl+F1': 624,
+    'Ctrl+F2': 625,
+    'Ctrl+F3': 626,
+    'Ctrl+F4': 627,
+    'Ctrl+F5': 628,
+    'Ctrl+F6': 629,
+    'Ctrl+F7': 630,
+    'Ctrl+F8': 631,
+    'Ctrl+F9': 632,
+    'Ctrl+F10': 633,
+    'Ctrl+F11': 634,
+    'Ctrl+F12': 635,
+    'Ctrl+LEFT': 549,
+    'Ctrl+TOP': 550,
+    'Ctrl+RIGHT': 551,
+    'Ctrl+DOWN': 552,
+    'Shift+0': 1072,
+    'Shift+1': 1073,
+    'Shift+2': 1074,
+    'Shift+3': 1075,
+    'Shift+4': 1076,
+    'Shift+5': 1077,
+    'Shift+6': 1078,
+    'Shift+7': 1079,
+    'Shift+8': 1080,
+    'Shift+9': 1081,
+    'Shift+A': 1089,
+    'Shift+B': 1090,
+    'Shift+C': 1091,
+    'Shift+D': 1092,
+    'Shift+E': 1093,
+    'Shift+F': 1094,
+    'Shift+G': 1095,
+    'Shift+H': 1096,
+    'Shift+I': 1097,
+    'Shift+J': 1098,
+    'Shift+K': 1099,
+    'Shift+L': 1100,
+    'Shift+M': 1101,
+    'Shift+N': 1102,
+    'Shift+O': 1103,
+    'Shift+P': 1104,
+    'Shift+Q': 1105,
+    'Shift+R': 1106,
+    'Shift+S': 1107,
+    'Shift+T': 1108,
+    'Shift+U': 1109,
+    'Shift+V': 1110,
+    'Shift+W': 1111,
+    'Shift+X': 1112,
+    'Shift+Y': 1113,
+    'Shift+Z': 1114,
+    'Shift+F1': 1136,
+    'Shift+F2': 1137,
+    'Shift+F3': 1138,
+    'Shift+F4': 1139,
+    'Shift+F5': 1140,
+    'Shift+F6': 1141,
+    'Shift+F7': 1142,
+    'Shift+F8': 1143,
+    'Shift+F9': 1144,
+    'Shift+F10': 1145,
+    'Shift+F11': 1146,
+    'Shift+F12': 1147,
+    'Shift+LEFT': 1061,
+    'Shift+TOP': 1062,
+    'Shift+RIGHT': 1063,
+    'Shift+DOWN': 1064,
+    'Alt+Ctrl+0': 816,
+    'Alt+Ctrl+1': 817,
+    'Alt+Ctrl+2': 818,
+    'Alt+Ctrl+3': 819,
+    'Alt+Ctrl+4': 820,
+    'Alt+Ctrl+5': 821,
+    'Alt+Ctrl+6': 822,
+    'Alt+Ctrl+7': 823,
+    'Alt+Ctrl+8': 824,
+    'Alt+Ctrl+9': 825,
+    'Alt+Ctrl+A': 833,
+    'Alt+Ctrl+B': 834,
+    'Alt+Ctrl+C': 835,
+    'Alt+Ctrl+D': 836,
+    'Alt+Ctrl+E': 837,
+    'Alt+Ctrl+F': 838,
+    'Alt+Ctrl+G': 839,
+    'Alt+Ctrl+H': 840,
+    'Alt+Ctrl+I': 841,
+    'Alt+Ctrl+J': 842,
+    'Alt+Ctrl+K': 843,
+    'Alt+Ctrl+L': 844,
+    'Alt+Ctrl+M': 845,
+    'Alt+Ctrl+N': 846,
+    'Alt+Ctrl+O': 847,
+    'Alt+Ctrl+P': 848,
+    'Alt+Ctrl+Q': 849,
+    'Alt+Ctrl+R': 850,
+    'Alt+Ctrl+S': 851,
+    'Alt+Ctrl+T': 852,
+    'Alt+Ctrl+U': 853,
+    'Alt+Ctrl+V': 854,
+    'Alt+Ctrl+W': 855,
+    'Alt+Ctrl+X': 856,
+    'Alt+Ctrl+Y': 857,
+    'Alt+Ctrl+Z': 858,
+    'Alt+Ctrl+F1': 880,
+    'Alt+Ctrl+F2': 881,
+    'Alt+Ctrl+F3': 882,
+    'Alt+Ctrl+F4': 883,
+    'Alt+Ctrl+F5': 884,
+    'Alt+Ctrl+F6': 885,
+    'Alt+Ctrl+F7': 886,
+    'Alt+Ctrl+F8': 887,
+    'Alt+Ctrl+F9': 888,
+    'Alt+Ctrl+F10': 889,
+    'Alt+Ctrl+F11': 890,
+    'Alt+Ctrl+F12': 891,
+    'Alt+Ctrl+LEFT': 805,
+    'Alt+Ctrl+TOP': 806,
+    'Alt+Ctrl+RIGHT': 807,
+    'Alt+Ctrl+DOWN': 808,
+    'Alt+Shift+0': 1328,
+    'Alt+Shift+1': 1329,
+    'Alt+Shift+2': 1330,
+    'Alt+Shift+3': 1331,
+    'Alt+Shift+4': 1332,
+    'Alt+Shift+5': 1333,
+    'Alt+Shift+6': 1334,
+    'Alt+Shift+7': 1335,
+    'Alt+Shift+8': 1336,
+    'Alt+Shift+9': 1337,
+    'Alt+Shift+A': 1345,
+    'Alt+Shift+B': 1346,
+    'Alt+Shift+C': 1347,
+    'Alt+Shift+D': 1348,
+    'Alt+Shift+E': 1349,
+    'Alt+Shift+F': 1350,
+    'Alt+Shift+G': 1351,
+    'Alt+Shift+H': 1352,
+    'Alt+Shift+I': 1353,
+    'Alt+Shift+J': 1354,
+    'Alt+Shift+K': 1355,
+    'Alt+Shift+L': 1356,
+    'Alt+Shift+M': 1357,
+    'Alt+Shift+N': 1358,
+    'Alt+Shift+O': 1359,
+    'Alt+Shift+P': 1360,
+    'Alt+Shift+Q': 1361,
+    'Alt+Shift+R': 1362,
+    'Alt+Shift+S': 1363,
+    'Alt+Shift+T': 1364,
+    'Alt+Shift+U': 1365,
+    'Alt+Shift+V': 1366,
+    'Alt+Shift+W': 1367,
+    'Alt+Shift+X': 1368,
+    'Alt+Shift+Y': 1369,
+    'Alt+Shift+Z': 1370,
+    'Alt+Shift+F1': 1392,
+    'Alt+Shift+F2': 1393,
+    'Alt+Shift+F3': 1394,
+    'Alt+Shift+F4': 1395,
+    'Alt+Shift+F5': 1396,
+    'Alt+Shift+F6': 1397,
+    'Alt+Shift+F7': 1398,
+    'Alt+Shift+F8': 1399,
+    'Alt+Shift+F9': 1400,
+    'Alt+Shift+F10': 1401,
+    'Alt+Shift+F11': 1402,
+    'Alt+Shift+F12': 1403,
+    'Alt+Shift+LEFT': 1317,
+    'Alt+Shift+TOP': 1318,
+    'Alt+Shift+RIGHT': 1319,
+    'Alt+Shift+DOWN': 1320,
+    'Ctrl+Shift+0': 1584,
+    'Ctrl+Shift+1': 1585,
+    'Ctrl+Shift+2': 1586,
+    'Ctrl+Shift+3': 1587,
+    'Ctrl+Shift+4': 1588,
+    'Ctrl+Shift+5': 1589,
+    'Ctrl+Shift+6': 1590,
+    'Ctrl+Shift+7': 1591,
+    'Ctrl+Shift+8': 1592,
+    'Ctrl+Shift+9': 1593,
+    'Ctrl+Shift+A': 1601,
+    'Ctrl+Shift+B': 1602,
+    'Ctrl+Shift+C': 1603,
+    'Ctrl+Shift+D': 1604,
+    'Ctrl+Shift+E': 1605,
+    'Ctrl+Shift+F': 1606,
+    'Ctrl+Shift+G': 1607,
+    'Ctrl+Shift+H': 1608,
+    'Ctrl+Shift+I': 1609,
+    'Ctrl+Shift+J': 1610,
+    'Ctrl+Shift+K': 1611,
+    'Ctrl+Shift+L': 1612,
+    'Ctrl+Shift+M': 1613,
+    'Ctrl+Shift+N': 1614,
+    'Ctrl+Shift+O': 1615,
+    'Ctrl+Shift+P': 1616,
+    'Ctrl+Shift+Q': 1617,
+    'Ctrl+Shift+R': 1618,
+    'Ctrl+Shift+S': 1619,
+    'Ctrl+Shift+T': 1620,
+    'Ctrl+Shift+U': 1621,
+    'Ctrl+Shift+V': 1622,
+    'Ctrl+Shift+W': 1623,
+    'Ctrl+Shift+X': 1624,
+    'Ctrl+Shift+Y': 1625,
+    'Ctrl+Shift+Z': 1626,
+    'Ctrl+Shift+F1': 1648,
+    'Ctrl+Shift+F2': 1649,
+    'Ctrl+Shift+F3': 1650,
+    'Ctrl+Shift+F4': 1651,
+    'Ctrl+Shift+F5': 1652,
+    'Ctrl+Shift+F6': 1653,
+    'Ctrl+Shift+F7': 1654,
+    'Ctrl+Shift+F8': 1655,
+    'Ctrl+Shift+F9': 1656,
+    'Ctrl+Shift+F10': 1657,
+    'Ctrl+Shift+F11': 1658,
+    'Ctrl+Shift+F12': 1659,
+    'Ctrl+Shift+LEFT': 1573,
+    'Ctrl+Shift+TOP': 1574,
+    'Ctrl+Shift+RIGHT': 1575,
+    'Ctrl+Shift+DOWN': 1576,
+    'Alt+Ctrl+Shift+0': 1840,
+    'Alt+Ctrl+Shift+1': 1841,
+    'Alt+Ctrl+Shift+2': 1842,
+    'Alt+Ctrl+Shift+3': 1843,
+    'Alt+Ctrl+Shift+4': 1844,
+    'Alt+Ctrl+Shift+5': 1845,
+    'Alt+Ctrl+Shift+6': 1846,
+    'Alt+Ctrl+Shift+7': 1847,
+    'Alt+Ctrl+Shift+8': 1848,
+    'Alt+Ctrl+Shift+9': 1849,
+    'Alt+Ctrl+Shift+A': 1857,
+    'Alt+Ctrl+Shift+B': 1858,
+    'Alt+Ctrl+Shift+C': 1859,
+    'Alt+Ctrl+Shift+D': 1860,
+    'Alt+Ctrl+Shift+E': 1861,
+    'Alt+Ctrl+Shift+F': 1862,
+    'Alt+Ctrl+Shift+G': 1863,
+    'Alt+Ctrl+Shift+H': 1864,
+    'Alt+Ctrl+Shift+I': 1865,
+    'Alt+Ctrl+Shift+J': 1866,
+    'Alt+Ctrl+Shift+K': 1867,
+    'Alt+Ctrl+Shift+L': 1868,
+    'Alt+Ctrl+Shift+M': 1869,
+    'Alt+Ctrl+Shift+N': 1870,
+    'Alt+Ctrl+Shift+O': 1871,
+    'Alt+Ctrl+Shift+P': 1872,
+    'Alt+Ctrl+Shift+Q': 1873,
+    'Alt+Ctrl+Shift+R': 1874,
+    'Alt+Ctrl+Shift+S': 1875,
+    'Alt+Ctrl+Shift+T': 1876,
+    'Alt+Ctrl+Shift+U': 1877,
+    'Alt+Ctrl+Shift+V': 1878,
+    'Alt+Ctrl+Shift+W': 1879,
+    'Alt+Ctrl+Shift+X': 1880,
+    'Alt+Ctrl+Shift+Y': 1881,
+    'Alt+Ctrl+Shift+Z': 1882,
+    'Alt+Ctrl+Shift+F1': 1904,
+    'Alt+Ctrl+Shift+F2': 1905,
+    'Alt+Ctrl+Shift+F3': 1906,
+    'Alt+Ctrl+Shift+F4': 1907,
+    'Alt+Ctrl+Shift+F5': 1908,
+    'Alt+Ctrl+Shift+F6': 1909,
+    'Alt+Ctrl+Shift+F7': 1910,
+    'Alt+Ctrl+Shift+F8': 1911,
+    'Alt+Ctrl+Shift+F9': 1912,
+    'Alt+Ctrl+Shift+F10': 1913,
+    'Alt+Ctrl+Shift+F11': 1914,
+    'Alt+Ctrl+Shift+F12': 1915,
+    'Alt+Ctrl+Shift+LEFT': 1829,
+    'Alt+Ctrl+Shift+TOP': 1830,
+    'Alt+Ctrl+Shift+RIGHT': 1831,
+    'Alt+Ctrl+Shift+DOWN': 1832
+  };
 
   DataType.Color = (function(_super) {
     var dec2hex, hex2dec, scope,
@@ -914,7 +1495,7 @@
       this.__list = sort(this.__list);
       i = 0;
       while (item = this.__list[i]) {
-        if (item.__isDisposed) {
+        if (item && item.__isDisposed) {
           item.update(cache);
           i++;
         } else {
@@ -1328,7 +1909,42 @@
   Input.Keyboard = (function(_super) {
     __extends(Keyboard, _super);
 
-    function Keyboard(dom) {}
+    Keyboard.prototype.press = null;
+
+    function Keyboard(dom) {
+      var textarea,
+        _this = this;
+
+      this.press = null;
+      textarea = document.createElement('textarea');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-500px';
+      dom.appendChild(textarea);
+      dom.addEventListener('click', function() {
+        return textarea.focus();
+      });
+      document.body.addEventListener('keydown', function(event) {
+        var identity;
+
+        identity = parseInt(event.keyCode, 10);
+        if (event.altKey) {
+          identity += 256;
+        }
+        if (event.ctrlKey) {
+          identity += 512;
+        }
+        if (event.shiftKey) {
+          identity += 1024;
+        }
+        return _this.press = {
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          keyCode: event.keyCode,
+          identity: identity
+        };
+      });
+    }
 
     return Keyboard;
 
@@ -1337,15 +1953,26 @@
   Input.Mouse = (function(_super) {
     __extends(Mouse, _super);
 
-    Mouse.prototype.trigger = null;
+    Mouse.prototype.click = null;
+
+    Mouse.prototype.position = null;
 
     function Mouse(dom) {
       var _this = this;
 
-      dom.addEventListener('click', function(event) {
-        return _this.mouseTrigger = {
-          x: offsetX,
-          y: offsetY
+      this.click = null;
+      this.position = null;
+      dom.addEventListener('mousedown', function(event) {
+        return _this.click = {
+          button: event.button,
+          x: event.offsetX,
+          y: event.offsetY
+        };
+      });
+      dom.addEventListener('mouseover', function(event) {
+        return _this.position = {
+          x: event.offsetX,
+          y: event.offsetY
         };
       });
     }

@@ -14,8 +14,7 @@ class @Hikari
 		@DataType	= DataType
 		@Vector		= Vector
 		@Event		= Event
-		@Keyboard	= Keyboard
-		@Mouse		= Mouse
+		@Const		= Const
 		@NetWork	= Network
 
 	__init: =>
@@ -30,18 +29,22 @@ class @Hikari
 
 	update: ()=>
 		@stage.update()
+		@input.update()
 		@__delay @update
 			
 
 	constructor: (container, width, height, callback)->
 		@__delay = null
-		@fps = 30
+		@fps = 60
 		@times = 1000 / 30
 
 		@__init()
 
 		# Draw Stage
 		@stage = new Stage width, height, container
+
+		@eventMap = new EventMap width, height
+		@input = new Input @stage, @eventMap
 
 		# load resources
 		@__loadResources()
