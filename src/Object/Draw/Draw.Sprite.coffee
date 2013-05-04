@@ -27,7 +27,7 @@ class Draw.Sprite extends Draw
 		@__list = sort @__list
 		i = 0
 		while item = @__list[i] 
-			if item.__isDisposed
+			if item and item.__isDisposed
 				item.update cache
 				i++
 			else

@@ -9,10 +9,15 @@ class Stage extends Object
 	width: 0
 	height: 0
 
+	sort = (list)->
+		list.sort (a,b)->
+			a.z > b.z
+
 	append: (o)=>
 		unless o.type() is 'draw'
 			console.log 'error: object cannt append to canvas', o
 			return
+
 		list.push o if ['bitmap', 'sprite'].indexOf o.drawType() > -1
 		o.draw this
 
@@ -20,7 +25,14 @@ class Stage extends Object
 		@context.restore()
 		@context.save()
 		@context.clearRect 0, 0, @width, @height
-		item.update() for item in list
+		list = sort list
+		i = 0
+		while item = list[i] 
+			if item and item.__isDisposed
+				item.update()
+				i++
+			else
+				list.splice i, 1
 
 	constructor: (width, height, container)->
 		list = []
