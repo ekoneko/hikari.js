@@ -7,6 +7,7 @@ class Draw extends Object
 	__z: 0
 	__width: 0
 	__height: 0
+	__stage: null
 	__options: {}
 
 	drawType: ()=>
@@ -15,26 +16,31 @@ class Draw extends Object
 	x: (x)=>
 		if typeof x is 'number'
 			@__x = x
+			@__stage.needUpdate = on if @__stage
 		@__x
 
 	y: (y)=>
 		if typeof y is 'number'
 			@__y = y
+			@__stage.needUpdate = on if @__stage
 		@__y
 
 	z: (z)=>
 		if typeof z is 'number'
 			@__z = Math.min 200, Math.max(0, z)
+			@__stage.needUpdate = on if @__stage
 		@__z
 
 	width: (width)=>
 		if typeof width is 'number'
 			@__width = width
+			@__stage.needUpdate = on if @__stage
 		@__width
 
 	height: (height)=>
 		if typeof height is 'number'
 			@__height = height
+			@__stage.needUpdate = on if @__stage
 		@__height
 
 	draw: (stage)=>
@@ -46,6 +52,7 @@ class Draw extends Object
 			for key of o
 				unless typeof @__options[key] is 'undefined'
 					@__options[key] = o[key]
+			@__stage.needUpdate = on if @__stage
 		@__options
 
 	clone: (dest, src)=>
@@ -55,4 +62,5 @@ class Draw extends Object
 
 	destroy: ()=>
 		@isDisposed = off
+		@__stage.needUpdate = on if @__stage
 		super()

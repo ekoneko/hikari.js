@@ -41,13 +41,17 @@ class Draw.Vector extends Draw
 		@__context.fillStyle = @__options.fillStyle
 		@__context.closePath()
 		@__context.stroke()
+		@__context.fill()
 
 	append: (v)=>
 		if v.type() is 'vector'
 			@vector.push v
+			@__stage.needUpdate = on if @__stage
 		this
 
 	constructor: ()->
+		@vector = []
+		@__stage = null
 		@__options = 
 			lineWidth: 1
 			strokeStyle: 'black' # color|gradient|pattern

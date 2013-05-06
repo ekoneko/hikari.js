@@ -35,7 +35,7 @@ class @Hikari
 
 	constructor: (container, width, height, callback)->
 		@__delay = null
-		@fps = 60
+		@fps = 30
 		@times = 1000 / 30
 
 		@__init()

@@ -25,6 +25,7 @@ class Draw.Bitmap extends Draw
 		@entity.src = src
 
 	draw: (stage)=>
+		@__stage = stage
 		@__context = stage.context if stage
 		@__isDisposed = true
 		@update()
@@ -66,6 +67,7 @@ class Draw.Bitmap extends Draw
 			scaleY: 1
 			alpha: 1
 			rotate: 0
+		@__stage = null
 		@entity = null
 		@__context = null
 		@width width

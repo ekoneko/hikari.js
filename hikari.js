@@ -48,7 +48,7 @@
       this.update = __bind(this.update, this);
       this.__loadResources = __bind(this.__loadResources, this);
       this.__init = __bind(this.__init, this);      this.__delay = null;
-      this.fps = 60;
+      this.fps = 30;
       this.times = 1000 / 30;
       this.__init();
       this.stage = new Stage(width, height, container);
@@ -165,6 +165,8 @@
 
     Draw.prototype.__height = 0;
 
+    Draw.prototype.__stage = null;
+
     Draw.prototype.__options = {};
 
     Draw.prototype.drawType = function() {
@@ -174,6 +176,9 @@
     Draw.prototype.x = function(x) {
       if (typeof x === 'number') {
         this.__x = x;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__x;
     };
@@ -181,6 +186,9 @@
     Draw.prototype.y = function(y) {
       if (typeof y === 'number') {
         this.__y = y;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__y;
     };
@@ -188,6 +196,9 @@
     Draw.prototype.z = function(z) {
       if (typeof z === 'number') {
         this.__z = Math.min(200, Math.max(0, z));
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__z;
     };
@@ -195,6 +206,9 @@
     Draw.prototype.width = function(width) {
       if (typeof width === 'number') {
         this.__width = width;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__width;
     };
@@ -202,6 +216,9 @@
     Draw.prototype.height = function(height) {
       if (typeof height === 'number') {
         this.__height = height;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__height;
     };
@@ -218,6 +235,9 @@
           if (typeof this.__options[key] !== 'undefined') {
             this.__options[key] = o[key];
           }
+        }
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
         }
       }
       return this.__options;
@@ -236,6 +256,9 @@
 
     Draw.prototype.destroy = function() {
       this.isDisposed = false;
+      if (this.__stage) {
+        this.__stage.needUpdate = true;
+      }
       return Draw.__super__.destroy.call(this);
     };
 
@@ -479,7 +502,7 @@
   })();
 
   Stage = (function(_super) {
-    var list, sort;
+    var colorMix, imageMix, list, sort;
 
     __extends(Stage, _super);
 
@@ -497,10 +520,44 @@
 
     Stage.prototype.height = 0;
 
+    Stage.prototype.needUpdate = false;
+
     sort = function(list) {
       return list.sort(function(a, b) {
-        return a.z > b.z;
+        return a.z() > b.z();
       });
+    };
+
+    colorMix = function(color1, alpha1, color2, alpha2) {
+      return (color1 * alpha1 * (255 - alpha2) + color2 * alpha2) / 255;
+    };
+
+    imageMix = function(map, item, width, height) {
+      var image, ip, line, row, sp;
+
+      image = item.update();
+      if (!image) {
+        return map;
+      }
+      line = image.y;
+      row = image.x;
+      while (line <= image.height + image.y) {
+        row = image.x;
+        while (row <= image.width + image.x) {
+          sp = (row + line * width) * 4;
+          ip = (row - image.x + (line - image.y) * image.width) * 4;
+          if (image.map[ip + 3] > 0) {
+            map[sp + 0] = colorMix(map[sp + 0], map[sp + 3], image.map[ip + 0], image.map[ip + 3]);
+            map[sp + 1] = colorMix(map[sp + 1], map[sp + 3], image.map[ip + 1], image.map[ip + 3]);
+            map[sp + 2] = colorMix(map[sp + 2], map[sp + 3], image.map[ip + 2], image.map[ip + 3]);
+            map[sp + 3] = map[sp + 3] + image.map[ip + 3] - map[sp + 3] * image.map[ip + 3] / 255;
+          }
+          row += 1;
+        }
+        line++;
+      }
+      image = null;
+      return map;
     };
 
     Stage.prototype.append = function(o) {
@@ -508,30 +565,40 @@
         console.log('error: object cannt append to canvas', o);
         return;
       }
-      if (['bitmap', 'sprite'].indexOf(o.drawType() > -1)) {
+      if (['bitmap', 'sprite', 'vector'].indexOf(o.drawType() > -1)) {
         list.push(o);
       }
-      return o.draw(this);
+      o.draw(this);
+      this.needUpdate = true;
+      return this;
     };
 
     Stage.prototype.update = function() {
-      var i, item, _results;
+      var i, imageData, item, map;
 
+      if (!this.needUpdate) {
+        return;
+      }
+      console.log('update');
+      this.needUpdate = false;
       this.context.restore();
       this.context.save();
       this.context.clearRect(0, 0, this.width, this.height);
       list = sort(list);
       i = 0;
-      _results = [];
+      imageData = this.context.getImageData(0, 0, this.width, this.height);
+      map = imageData.data;
       while (item = list[i]) {
         if (item && item.__isDisposed) {
-          item.update();
-          _results.push(i++);
+          map = imageMix(map, item, this.width, this.height);
+          i++;
         } else {
-          _results.push(list.splice(i, 1));
+          list.splice(i, 1);
         }
       }
-      return _results;
+      imageData.data = map;
+      this.context.putImageData(imageData, 0, 0);
+      return imageData = null;
     };
 
     function Stage(width, height, container) {
@@ -1375,6 +1442,7 @@
     };
 
     Bitmap.prototype.draw = function(stage) {
+      this.__stage = stage;
       if (stage) {
         this.__context = stage.context;
       }
@@ -1438,6 +1506,7 @@
         alpha: 1,
         rotate: 0
       };
+      this.__stage = null;
       this.entity = null;
       this.__context = null;
       this.width(width);
@@ -1482,7 +1551,7 @@
 
     sort = function(list) {
       return list.sort(function(a, b) {
-        return a.z > b.z;
+        return a.z() > b.z();
       });
     };
 
@@ -1492,14 +1561,15 @@
       cache = this.__canvas.getContext('2d');
       cache.restore();
       cache.save();
+      cache.clearRect(0, 0, this.__width, this.__height);
       this.__list = sort(this.__list);
       i = 0;
       while (item = this.__list[i]) {
-        if (item && item.__isDisposed) {
+        if (!(item && item.__isDisposed)) {
+          this.__list.splice(i, 1);
+        } else {
           item.update(cache);
           i++;
-        } else {
-          this.__list.splice(i, 1);
         }
       }
       this.__imageChanged = false;
@@ -1509,10 +1579,10 @@
     Sprite.prototype.__updateImageData = function() {
       var data, i;
 
-      i = 0;
       if (!(this.__tone && !this.__tone.noChange)) {
         return;
       }
+      i = 0;
       while (i < this.__imageData.data.length) {
         data = this.__tone.mix(this.__imageData.data[i], this.__imageData.data[i + 1], this.__imageData.data[i + 2], this.__imageData.data[i + 3]);
         this.__imageData.data[i] = data[0];
@@ -1551,6 +1621,9 @@
       if (t && t.type() === 'datatype' && t.dataType() === 'tone') {
         this.__tone = t;
         this.__toneChanged = true;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__tone;
     };
@@ -1567,10 +1640,14 @@
       }
       this.z(zAutoIncrement++);
       this.__list.push(image);
-      return this.__imageChanged = true;
+      this.__imageChanged = true;
+      if (this.__stage) {
+        return this.__stage.needUpdate = true;
+      }
     };
 
     Sprite.prototype.draw = function(stage) {
+      this.__stage = stage;
       this.__context = stage.context;
       this.__isDisposed = true;
       if (this.__canvas === null) {
@@ -1582,7 +1659,7 @@
     };
 
     Sprite.prototype.update = function(_context) {
-      var cache;
+      var cache, ret;
 
       if (_context) {
         this.__context = _context;
@@ -1601,7 +1678,15 @@
         this.__updateBlink();
       }
       if (this.__imageData) {
-        return this.__context.putImageData(this.__imageData, this.__x, this.__y);
+        return ret = {
+          map: this.__imageData.data,
+          x: this.__x,
+          y: this.__y,
+          width: this.__width,
+          height: this.__height
+        };
+      } else {
+        return ret = false;
       }
     };
 
@@ -1641,6 +1726,9 @@
     Sprite.prototype.dispose = function(value) {
       if (value) {
         this.__isDisposed = value;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this.__isDisposed;
     };
@@ -1656,6 +1744,7 @@
       this.__updateBlink = __bind(this.__updateBlink, this);
       this.__updateImageData = __bind(this.__updateImageData, this);
       this.__updateCanvas = __bind(this.__updateCanvas, this);      this.__tone = null;
+      this.__stage = null;
       this.__list = [];
       this.__canvas = null;
       this.__context = null;
@@ -1732,12 +1821,16 @@
       this.__context.lineCap = this.__options.lineCap;
       this.__context.fillStyle = this.__options.fillStyle;
       this.__context.closePath();
-      return this.__context.stroke();
+      this.__context.stroke();
+      return this.__context.fill();
     };
 
     Vector.prototype.append = function(v) {
       if (v.type() === 'vector') {
         this.vector.push(v);
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
       return this;
     };
@@ -1747,7 +1840,9 @@
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
       this.__updateRect = __bind(this.__updateRect, this);
-      this.__updateLine = __bind(this.__updateLine, this);      this.__options = {
+      this.__updateLine = __bind(this.__updateLine, this);      this.vector = [];
+      this.__stage = null;
+      this.__options = {
         lineWidth: 1,
         strokeStyle: 'black',
         lineCap: 'butt',
@@ -1778,16 +1873,16 @@
       div.style.top = "" + this.__attribute.y + "px";
       div.style.width = "" + this.__attribute.width + "px";
       div.style.height = "" + this.__attribute.height + "px";
-      return div.style.zIndex = attribute.z;
+      return div.style.zIndex = this.__attribute.z;
     };
 
     BLOCK.prototype.build = function(options, callback) {
       this.element = document.createElement('div');
-      this.set(options);
-      style(this.element);
+      this.options(options);
+      this.__style(this.element);
       if (typeof options.content === 'string') {
         this.element.innerHTML = this.options.content;
-      } else {
+      } else if (typeof options.content === 'object') {
         this.element.appendChild(this.options.content);
       }
       if (typeof callback === 'function') {

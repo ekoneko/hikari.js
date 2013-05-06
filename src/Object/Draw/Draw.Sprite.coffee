@@ -18,26 +18,28 @@ class Draw.Sprite extends Draw
 
 	sort = (list)->
 		list.sort (a,b)->
-			a.z > b.z
+			a.z() > b.z()
 
 	__updateCanvas: ()=>
 		cache = @__canvas.getContext '2d'
 		cache.restore()
 		cache.save()
+		cache.clearRect 0, 0, @__width, @__height
 		@__list = sort @__list
 		i = 0
 		while item = @__list[i] 
-			if item and item.__isDisposed
+			unless item and item.__isDisposed
+				@__list.splice i, 1
+			else
 				item.update cache
 				i++
-			else
-				@__list.splice i, 1
+
 		@__imageChanged = off
 		cache
 
 	__updateImageData: ()=>
-		i = 0
 		return unless @__tone and !@__tone.noChange
+		i = 0
 		while i < @__imageData.data.length
 			data = @__tone.mix @__imageData.data[i],
 				@__imageData.data[i + 1],
@@ -73,6 +75,7 @@ class Draw.Sprite extends Draw
 		if t and t.type() is 'datatype' and t.dataType() is 'tone'
 			@__tone = t
 			@__toneChanged = on
+			@__stage.needUpdate = on if @__stage
 		@__tone
 
 	append: (image)=>
@@ -82,8 +85,10 @@ class Draw.Sprite extends Draw
 		@z zAutoIncrement++
 		@__list.push image
 		@__imageChanged = on
+		@__stage.needUpdate = on if @__stage
 
 	draw: (stage)=>
+		@__stage = stage
 		@__context = stage.context
 		@__isDisposed = on
 		if @__canvas is null
@@ -104,7 +109,15 @@ class Draw.Sprite extends Draw
 			@__updateImageData this
 
 		@__updateBlink() if @__blinkCount > 0
-		@__context.putImageData @__imageData, @__x, @__y if @__imageData
+		if @__imageData
+			ret =
+				map: @__imageData.data
+				x: @__x
+				y: @__y
+				width: @__width
+				height: @__height
+		else
+			ret = off
 
 	clone: ()=>
 		dest = new Draw.Sprite()
@@ -135,11 +148,14 @@ class Draw.Sprite extends Draw
 		@__blinkTone.blue 0
 
 	dispose: (value)=>
-		@__isDisposed = value if value
+		if value
+			@__isDisposed = value
+			@__stage.needUpdate = on if @__stage
 		@__isDisposed
 
 	constructor: (width, height, x, y)->
 		@__tone = null	# Tone
+		@__stage = null
 		@__list = []
 		@__canvas = null
 		@__context = null

@@ -14,16 +14,16 @@ class HTML.BLOCK extends HTML
 		div.style.top = "#{@__attribute.y}px"
 		div.style.width = "#{@__attribute.width}px"
 		div.style.height = "#{@__attribute.height}px"
-		div.style.zIndex = attribute.z
+		div.style.zIndex = @__attribute.z
 
 	build: (options, callback)=>
 		@element = document.createElement 'div'
-		@set options
+		@options options
 
-		style @element
+		@__style @element
 		if typeof options.content is 'string'
 			@element.innerHTML = @options.content
-		else
+		else if typeof options.content is 'object'
 			@element.appendChild @options.content
 
 		callback() if typeof callback is 'function'
