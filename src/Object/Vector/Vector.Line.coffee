@@ -9,8 +9,15 @@ class Vector.Line extends Vector
 			x: 0
 			y: 0
 
-	isInSide: ()->
+	isInside: (x, y)->
 		off
+
+	move: (dx, dy)=>
+		@options.start.x += dx
+		@options.start.y += dy
+
+		@options.end.x += dx
+		@options.end.y += dy
 
 	constructor: (start, end) ->
 		@options = {}

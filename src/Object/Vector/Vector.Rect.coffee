@@ -8,13 +8,17 @@ class Vector.Rect extends Vector
 		width: 0
 		height: 0
 
-	isInSide: (x, y)=>
+	isInside: (x, y)=>
 		if x < @options.start.x or
 		x > @options.start.x + @options.start.width or
 		y < @options.start.y or
 		y > @options.start.y + @options.start.height
 			off
 		on
+
+	move: (dx, dy)=>
+		@options.start.x += dx
+		@options.start.y += dy
 
 	constructor: (start, width, height) ->
 		@options = {}
