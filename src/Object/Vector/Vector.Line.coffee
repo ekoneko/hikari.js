@@ -9,6 +9,9 @@ class Vector.Line extends Vector
 			x: 0
 			y: 0
 
+	isInSide: ()->
+		off
+
 	constructor: (start, end) ->
 		@options = {}
 		@options.start = start

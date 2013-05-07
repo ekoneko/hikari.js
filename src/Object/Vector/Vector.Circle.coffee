@@ -7,6 +7,9 @@ class Vector.Circle extends Vector
 			y: 0
 		radius: 0
 
+	isInSide: (x, y)=>
+		Math.pow((@options.x - x), 2) + Math.pow((@options.y - y), 2) <= options.radius * options.radius
+
 	constructor: (origin, radius) ->
 		@options = {}
 		@options.origin = origin
