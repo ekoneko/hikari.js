@@ -52,7 +52,6 @@ class Stage extends Object
 
 	update: ()=>
 		return unless @needUpdate
-		console.log 'update'
 		@needUpdate = off
 		@context.restore()
 		@context.save()
