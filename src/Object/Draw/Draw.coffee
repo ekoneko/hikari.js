@@ -60,6 +60,12 @@ class Draw extends Object
 			dest["__#{key}"] = src["__#{key}"]
 		dest
 
+	dispose: (value)=>
+		if value
+			@__isDisposed = value
+			@__stage.needUpdate = on if @__stage
+		@__isDisposed
+
 	destroy: ()=>
 		@isDisposed = off
 		@__stage.needUpdate = on if @__stage

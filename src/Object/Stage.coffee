@@ -1,6 +1,8 @@
 class Stage extends Object
 
-	list = []
+	list:
+		sprite: []
+		vector: []
 	__type: 'stage'
 
 	box: null
@@ -39,13 +41,42 @@ class Stage extends Object
 		image = null
 		map
 
+	__updateSprite: ()=>
+		list = @list.sprite
+		list = sort list
+		imageData = @context.getImageData 0, 0, @width, @height
+		map = imageData.data
+		i = 0
+		while item = list[i] 
+			if item and item.dispose()
+				map = imageMix map, item, @width, @height
+				i++				
+			else
+				list.splice i, 1
+		imageData.data = map
+		@context.putImageData imageData, 0, 0
+		imageData = null
+
+	__updateVector: ()=>
+		list = @list.vector
+		list = sort list
+		i = 0
+		while item = list[i]
+			if item and item.dispose()
+				item.update @context
+				i++
+			else
+				list.splice i, 1
 
 	append: (o)=>
 		unless o.type() is 'draw'
 			console.log 'error: object cannt append to canvas', o
 			return
 
-		list.push o if ['bitmap', 'sprite', 'vector'].indexOf o.drawType() > -1
+		if o.drawType() is 'sprite'
+			@list.sprite.push o
+		else if o.drawType() is 'vector'
+			@list.vector.push o
 		o.draw this
 		@needUpdate = on
 		this
@@ -56,22 +87,14 @@ class Stage extends Object
 		@context.restore()
 		@context.save()
 		@context.clearRect 0, 0, @width, @height
-		list = sort list
-		i = 0
-		imageData = @context.getImageData 0, 0, @width, @height
-		map = imageData.data
-		while item = list[i] 
-			if item and item.__isDisposed
-				map = imageMix map, item, @width, @height
-				i++				
-			else
-				list.splice i, 1
-		imageData.data = map
-		@context.putImageData imageData, 0, 0
-		imageData = null
+
+		@__updateSprite()
+		@__updateVector()
 
 	constructor: (width, height, container)->
-		list = []
+		@list =
+			sprite: []
+			vector: []
 		@width = width
 		@height = height
 		@canvas = document.createElement 'canvas'

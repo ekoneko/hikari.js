@@ -92,12 +92,6 @@ class Draw.Sprite extends Draw
 		dest.bitmap @__bitmap.clone()
 		dest
 
-	dispose: (value)=>
-		if value
-			@__isDisposed = value
-			@__stage.needUpdate = on if @__stage
-		@__isDisposed
-
 	constructor: (width, height, x, y)->
 		@__tone = null
 		@__stage = null

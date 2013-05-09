@@ -9,18 +9,20 @@ class Draw.Vector extends Draw
 		strokeStyle: 'black' # color|gradient|pattern
 		lineCap: 'butt'
 		fillStyle: 'black'
+		alpha: 1
 
 	vector: []
 
 	__updateLine: (vector)=>
-		@__context.moveTo vector.options.start.x, vector.options.start.y
-		@__context.lineTo vector.options.end.x, vector.options.end.y
+		@__context.moveTo vector.options.start.x + @__x, vector.options.start.y + @__y
+		@__context.lineTo vector.options.end.x + @__x, vector.options.end.y + @__y
 
 	__updateRect: (vector)=>
-		@__context.rect vector.options.start.x, vector.options.start.y,
+		@__context.rect vector.options.start.x + @__x, vector.options.start.y + @__y,
 		vector.options.width, vector.options.height
 
 	draw: (stage)=>
+		@__stage = stage
 		@__context = stage.context if stage
 		@__isDisposed = on
 		@update()
@@ -39,9 +41,13 @@ class Draw.Vector extends Draw
 		@__context.strokeStyle = @__options.strokeStyle
 		@__context.lineCap = @__options.lineCap
 		@__context.fillStyle = @__options.fillStyle
+		@__context.globalAlpha = @__options.alpha
 		@__context.closePath()
 		@__context.stroke()
 		@__context.fill()
+
+		# reset
+		@__context.globalAlpha = 1
 
 	append: (v)=>
 		if v.type() is 'vector'
@@ -49,7 +55,7 @@ class Draw.Vector extends Draw
 			@__stage.needUpdate = on if @__stage
 		this
 
-	constructor: ()->
+	constructor: (x, y)->
 		@vector = []
 		@__stage = null
 		@__options = 
@@ -57,3 +63,7 @@ class Draw.Vector extends Draw
 			strokeStyle: 'black' # color|gradient|pattern
 			lineCap: 'butt'
 			fillStyle: 'black'
+			alpha: 1
+
+		@x x
+		@y y

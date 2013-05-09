@@ -46,11 +46,6 @@ class Draw.Bitmap extends Draw
 			@__options.sourceWidth, @__options.sourceHeight,
 			@__x, @__y, @__width, @__height
 
-
-	dispose: (value)=>
-		@__isDisposed = value if value
-		@__isDisposed
-
 	destroy: ()=>
 		delete @entity
 		super()
