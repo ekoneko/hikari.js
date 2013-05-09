@@ -12,9 +12,6 @@ class Draw.Sprite extends Draw
 	__isDisposed: off
 	__imageChanged: off
 	__toneChanged: off
-	__blinkCount: 0
-	__blinkRGB: null
-	__blinkTone: null	# 闪烁时对之前tone的备份
 
 	sort = (list)->
 		list.sort (a,b)->
@@ -54,23 +51,6 @@ class Draw.Sprite extends Draw
 		@__toneChanged = off
 		true
 
-	__updateBlink: ()=>
-		if @__blinkCount % @__blinkFps >= @__blinkFps / 2
-			abs = 1
-		else
-			abs = -1
-		i = 0
-		while i < @__imageData.data.length
-			@__imageData.data[i] += @__blinkRGB.red() * abs
-			@__imageData.data[i + 1] += @__blinkRGB.green() * abs
-			@__imageData.data[i + 2] += @__blinkRGB.blue() * abs
-			i += 4
-		@__blinkCount--
-		if @__blinkCount is 0
-			@__imageChanged = on
-			@__blinkRGB = null
-
-
 	tone: (t)=>
 		if t and t.type() is 'datatype' and t.dataType() is 'tone'
 			@__tone = t
@@ -108,7 +88,6 @@ class Draw.Sprite extends Draw
 		else if @__toneChanged
 			@__updateImageData this
 
-		@__updateBlink() if @__blinkCount > 0
 		if @__imageData
 			ret =
 				map: @__imageData.data
@@ -124,28 +103,6 @@ class Draw.Sprite extends Draw
 		dest = super dest, this
 		dest.append item.clone() for item in @__list
 		dest
-
-	# options =
-	#	times
-	#	fps
-	#	color
-	blink: (options)=>
-		times = options.times or 2
-		fps = options.fps or 30
-		fps += fps % 2
-
-		if options.color and options.color.dataType and
-		options.colordataType() is 'color'
-			@__blinkRGB = options.color
-		else
-			@__blinkRGB = new DataType.Color 3, 3, 3
-		@__blinkCount = times * fps
-		@__blinkFps = fps
-		@__blinkTone =  null
-		@__blinkTone = @tone().clone()
-		@__blinkTone.red 0
-		@__blinkTone.green 0
-		@__blinkTone.blue 0
 
 	dispose: (value)=>
 		if value
@@ -163,9 +120,6 @@ class Draw.Sprite extends Draw
 		@__isDisposed = off
 		@__imageChanged = off
 		@__toneChanged = off
-		@__blinkCount = 0
-		@__blinkRGB = null
-		@__blinkTone = null
 		@width width
 		@height height
 		@x x
