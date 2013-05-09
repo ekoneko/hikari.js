@@ -14,20 +14,26 @@ class Event extends Object
 	#		(int)identity
 	#
 	# 	hover || click
-	# 		x
-	#		y
-	#		size(Rect|Circle)
+	#		scope(Rect|Circle)
+	#		button(1|2|3)
 	###
 	condition: null
 	map: null
+	priority: 0
 
-	move: (x, y)=>
-		@x = x
-		@y = y
-		@map.modify @__id if @map
+	move: (dx, dy)=>
+		return off unless @condition.scope
+		@condition.scope.move dx, dy
 
-	exec: (params)=>
-		@__action params
+		@map.modify this if @map
+
+	exec: (next)=>
+		@__action next
+
+	revoke: ()=>
+		return off unless @map
+		@map.revoke this
+		true
 
 	constructor: (eventType, condition, action)->
 		@map = @condition = @__action = null

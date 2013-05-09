@@ -287,9 +287,8 @@
     	#		(int)identity
     	#
     	# 	hover || click
-    	# 		x
-    	#		y
-    	#		size(Rect|Circle)
+    	#		scope(Rect|Circle)
+    	#		button(1|2|3)
     */
 
 
@@ -297,19 +296,32 @@
 
     Event.prototype.map = null;
 
-    Event.prototype.move = function(x, y) {
-      this.x = x;
-      this.y = y;
+    Event.prototype.priority = 0;
+
+    Event.prototype.move = function(dx, dy) {
+      if (!this.condition.scope) {
+        return false;
+      }
+      this.condition.scope.move(dx, dy);
       if (this.map) {
-        return this.map.modify(this.__id);
+        return this.map.modify(this);
       }
     };
 
-    Event.prototype.exec = function(params) {
-      return this.__action(params);
+    Event.prototype.exec = function(next) {
+      return this.__action(next);
+    };
+
+    Event.prototype.revoke = function() {
+      if (!this.map) {
+        return false;
+      }
+      this.map.revoke(this);
+      return true;
     };
 
     function Event(eventType, condition, action) {
+      this.revoke = __bind(this.revoke, this);
       this.exec = __bind(this.exec, this);
       this.move = __bind(this.move, this);      this.map = this.condition = this.__action = null;
       this.eventType = eventType;
@@ -324,6 +336,8 @@
   })(Object);
 
   EventMap = (function(_super) {
+    var sortEvent;
+
     __extends(EventMap, _super);
 
     EventMap.prototype.width = 0;
@@ -332,85 +346,261 @@
 
     EventMap.prototype.keyEvent = {};
 
-    EventMap.prototype.table = [];
+    EventMap.prototype.grid = 50;
 
-    EventMap.prototype.__triggerKeyPress = function(keyCode) {
-      var eventId, _i, _len, _ref2, _results;
+    EventMap.prototype.mouseEvent = [];
 
-      if (!this.keyEvent[keyCode]) {
-        return;
-      }
-      _ref2 = this.keyEvent[keyCode];
-      _results = [];
-      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-        eventId = _ref2[_i];
-        _results.push(Event.list[eventId].exec());
-      }
-      return _results;
+    sortEvent = function(array) {
+      return array = array.sort(function(a, b) {
+        return Event.list[a].priority > Event.list[b].priority;
+      });
     };
 
-    EventMap.prototype.__triggerClick = function(event) {};
+    EventMap.prototype.__detectScope = function(scope) {
+      var height, i, j, ret, width, x, x0, x1, y, y0, y1, _i, _j;
 
-    EventMap.prototype.__triggerHover = function(event) {};
+      ret = [];
+      if (scope.vectorType() === 'rect') {
+        x = scope.options.start.x;
+        y = scope.options.start.y;
+        width = scope.options.width;
+        height = scope.options.height;
+      } else if (scope.vectorType() === 'circle') {
+        x = scope.options.origin.x - scope.options.radius;
+        y = scope.options.origin.y - scope.options.radius;
+        width = x + scope.options.radius * 2;
+        height = y + scope.options.radius * 2;
+      } else {
+        return ret;
+      }
+      x0 = parseInt(x / this.grid, 10);
+      y0 = parseInt(y / this.grid, 10);
+      x1 = parseInt((x + width) / this.grid, 10);
+      y1 = parseInt((y + height) / this.grid, 10);
+      for (i = _i = y0; y0 <= y1 ? _i <= y1 : _i >= y1; i = y0 <= y1 ? ++_i : --_i) {
+        for (j = _j = x0; x0 <= x1 ? _j <= x1 : _j >= x1; j = x0 <= x1 ? ++_j : --_j) {
+          ret.push([j, i]);
+        }
+      }
+      return ret;
+    };
+
+    EventMap.prototype.__triggerKeyPress = function(keyCode) {
+      var events;
+
+      if (typeof this.keyEvent[keyCode] === 'undefined') {
+        return;
+      }
+      events = this.keyEvent[keyCode].concat();
+      return this.__exec(events);
+    };
+
+    EventMap.prototype.__triggerClick = function(action) {
+      var condition, eventId, events, i, x, y;
+
+      x = parseInt(action.x / this.grid, 10);
+      y = parseInt(action.y / this.grid, 10);
+      events = this.mouseEvent[y][x].click[3].concat();
+      if (action.button === 0) {
+        events = events.concat(this.mouseEvent[y][x].click[1]);
+      }
+      if (action.button === 1) {
+        events = events.concat(this.mouseEvent[y][x].click[2]);
+      }
+      i = 0;
+      while (eventId = events[i]) {
+        condition = Event.list[eventId].condition;
+        if (condition.scope.isInside(action.x, action.y)) {
+          i++;
+        } else {
+          events.splice(i, 1);
+        }
+      }
+      return this.__exec(events);
+    };
+
+    EventMap.prototype.__triggerHover = function(action) {
+      var condition, eventId, events, i, x, y;
+
+      x = parseInt(action.x / this.grid, 10);
+      y = parseInt(action.y / this.grid, 10);
+      events = this.mouseEvent[y][x].hover.concat();
+      i = 0;
+      while (eventId = events[i]) {
+        condition = Event.list[eventId].condition;
+        if (condition.scope.isInside(action.x, action.y)) {
+          i++;
+        } else {
+          events.splice(i, 1);
+        }
+      }
+      return this.__exec(events);
+    };
+
+    EventMap.prototype.__exec = function(events) {
+      var event,
+        _this = this;
+
+      if (!(events && events.length)) {
+        return;
+      }
+      event = Event.list[events.pop()];
+      if (event.type() !== 'event') {
+        return;
+      }
+      return event.exec(function() {
+        return _this.__exec(events);
+      });
+    };
+
+    EventMap.prototype.__pushEvent = function(stack, eventId) {
+      stack.push(eventId);
+      return sortEvent(stack);
+    };
 
     EventMap.prototype.register = function(event) {
+      var item, scope, _i, _j, _len, _len1;
+
       switch (event.eventType) {
         case 'keyPress':
-          if (!this.keyEvent[event.condition]) {
-            this.keyEvent[event.condition] = [];
+          if (typeof this.keyEvent[event.condition] === 'undefined') {
+            this.keyEvent[event.condition] = new Array();
           }
-          this.keyEvent[event.condition].push(event.__id);
+          this.__pushEvent(this.keyEvent[event.condition], event.__id);
           break;
         case 'hover':
+          scope = this.__detectScope(event.condition.scope);
+          for (_i = 0, _len = scope.length; _i < _len; _i++) {
+            item = scope[_i];
+            this.__pushEvent(this.mouseEvent[item[0]][item[1]].hover, event.__id);
+          }
           break;
         case 'click':
-          break;
+          scope = this.__detectScope(event.condition.scope);
+          if (!event.condition.button) {
+            event.condition.button = 1;
+          }
+          for (_j = 0, _len1 = scope.length; _j < _len1; _j++) {
+            item = scope[_j];
+            this.__pushEvent(this.mouseEvent[item[0]][item[1]].click[event.condition.button], event.__id);
+          }
       }
+      event.map = this;
+      return this;
     };
 
     EventMap.prototype.revoke = function(event) {
+      var i, lines, _i, _j, _len, _len1, _ref2, _ref3, _results, _results1;
+
       switch (event.eventType) {
         case 'keyPress':
-          return delete this.keyEvent[event.condition][event.__id];
+          i = this.keyEvent[event.condition].indexOf(event.__id);
+          if (i > -1) {
+            return this.keyEvent[event.condition].splice(i, 1);
+          }
+          break;
+        case 'hover':
+          _ref2 = this.mouseEvent;
+          _results = [];
+          for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+            lines = _ref2[_i];
+            _results.push((function() {
+              var _j, _len1, _results1;
+
+              _results1 = [];
+              for (_j = 0, _len1 = lines.length; _j < _len1; _j++) {
+                event = lines[_j];
+                i = event.hover.indexOf(event.__id);
+                if (i > -1) {
+                  _results1.push(event.hover.splice(i, 1));
+                } else {
+                  _results1.push(void 0);
+                }
+              }
+              return _results1;
+            })());
+          }
+          return _results;
+          break;
+        case 'click':
+          _ref3 = this.mouseEvent;
+          _results1 = [];
+          for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+            lines = _ref3[_j];
+            _results1.push((function() {
+              var _k, _len2, _results2;
+
+              _results2 = [];
+              for (_k = 0, _len2 = lines.length; _k < _len2; _k++) {
+                event = lines[_k];
+                if (!(event.click[event.button] && event.click[event.button].length)) {
+                  continue;
+                }
+                i = event.click[event.button].indexOf(event.__id);
+                if (i > -1) {
+                  _results2.push(event.click[event.button].splice(i, 1));
+                } else {
+                  _results2.push(void 0);
+                }
+              }
+              return _results2;
+            })());
+          }
+          return _results1;
       }
     };
 
-    EventMap.prototype.trigger = function(type, event) {
+    EventMap.prototype.trigger = function(type, action) {
       switch (type) {
         case 'keyPress':
-          this.__triggerKeyPress(event.identity);
+          this.__triggerKeyPress(action.identity);
           break;
         case 'click':
-          this.__triggerClick(event);
+          this.__triggerClick(action);
           break;
         case 'hover':
-          this.__triggerHover(event);
+          this.__triggerHover(action);
           break;
       }
+    };
+
+    EventMap.prototype.modify = function(event) {
+      this.revoke(event);
+      return this.register(event);
     };
 
     function EventMap(width, height, grid) {
+      this.modify = __bind(this.modify, this);
       this.trigger = __bind(this.trigger, this);
       this.revoke = __bind(this.revoke, this);
       this.register = __bind(this.register, this);
+      this.__pushEvent = __bind(this.__pushEvent, this);
+      this.__exec = __bind(this.__exec, this);
       this.__triggerHover = __bind(this.__triggerHover, this);
       this.__triggerClick = __bind(this.__triggerClick, this);
       this.__triggerKeyPress = __bind(this.__triggerKeyPress, this);
+      this.__detectScope = __bind(this.__detectScope, this);
       var l, lineCount, r, rowCount, _i, _j;
 
       this.width = width;
       this.height = height;
       this.keyEvent = {};
-      this.table = [];
-      grid = grid || 50;
-      lineCount = Math.ceil(width / grid);
-      rowCount = Math.ceil(height / grid);
+      this.mouseEvent = [];
+      if (grid) {
+        this.grid = grid;
+      }
+      lineCount = Math.ceil(width / this.grid);
+      rowCount = Math.ceil(height / this.grid);
       for (r = _i = 0; 0 <= rowCount ? _i < rowCount : _i > rowCount; r = 0 <= rowCount ? ++_i : --_i) {
-        this.table[r] = new Array(lineCount);
+        this.mouseEvent[r] = new Array(lineCount);
         for (l = _j = 0; 0 <= lineCount ? _j < lineCount : _j > lineCount; l = 0 <= lineCount ? ++_j : --_j) {
-          this.table[r][l] = {
-            click: [],
-            over: []
+          this.mouseEvent[r][l] = {
+            click: {
+              '1': [],
+              '2': [],
+              '3': []
+            },
+            hover: []
           };
         }
       }
@@ -579,7 +769,6 @@
       if (!this.needUpdate) {
         return;
       }
-      console.log('update');
       this.needUpdate = false;
       this.context.restore();
       this.context.save();
@@ -676,6 +865,8 @@
 
     function Vector() {
       this.setOptions = __bind(this.setOptions, this);
+      this.move = __bind(this.move, this);
+      this.isInside = __bind(this.isInside, this);
       this.vectorType = __bind(this.vectorType, this);      _ref3 = Vector.__super__.constructor.apply(this, arguments);
       return _ref3;
     }
@@ -686,12 +877,16 @@
       return this.__vectorType;
     };
 
+    Vector.prototype.isInside = function(x, y) {};
+
+    Vector.prototype.move = function(dx, dy) {};
+
     Vector.prototype.setOptions = function(_options) {
       var key;
 
       for (key in _options) {
-        if (typeof options[key] !== 'undefined') {
-          options[key] = _options[key];
+        if (typeof this.options[key] !== 'undefined') {
+          this.options[key] = _options[key];
         }
       }
       return true;
@@ -1543,12 +1738,6 @@
 
     Sprite.prototype.__toneChanged = false;
 
-    Sprite.prototype.__blinkCount = 0;
-
-    Sprite.prototype.__blinkRGB = null;
-
-    Sprite.prototype.__blinkTone = null;
-
     sort = function(list) {
       return list.sort(function(a, b) {
         return a.z() > b.z();
@@ -1593,28 +1782,6 @@
       }
       this.__toneChanged = false;
       return true;
-    };
-
-    Sprite.prototype.__updateBlink = function() {
-      var abs, i;
-
-      if (this.__blinkCount % this.__blinkFps >= this.__blinkFps / 2) {
-        abs = 1;
-      } else {
-        abs = -1;
-      }
-      i = 0;
-      while (i < this.__imageData.data.length) {
-        this.__imageData.data[i] += this.__blinkRGB.red() * abs;
-        this.__imageData.data[i + 1] += this.__blinkRGB.green() * abs;
-        this.__imageData.data[i + 2] += this.__blinkRGB.blue() * abs;
-        i += 4;
-      }
-      this.__blinkCount--;
-      if (this.__blinkCount === 0) {
-        this.__imageChanged = true;
-        return this.__blinkRGB = null;
-      }
     };
 
     Sprite.prototype.tone = function(t) {
@@ -1674,9 +1841,6 @@
       } else if (this.__toneChanged) {
         this.__updateImageData(this);
       }
-      if (this.__blinkCount > 0) {
-        this.__updateBlink();
-      }
       if (this.__imageData) {
         return ret = {
           map: this.__imageData.data,
@@ -1703,26 +1867,6 @@
       return dest;
     };
 
-    Sprite.prototype.blink = function(options) {
-      var fps, times;
-
-      times = options.times || 2;
-      fps = options.fps || 30;
-      fps += fps % 2;
-      if (options.color && options.color.dataType && options.colordataType() === 'color') {
-        this.__blinkRGB = options.color;
-      } else {
-        this.__blinkRGB = new DataType.Color(3, 3, 3);
-      }
-      this.__blinkCount = times * fps;
-      this.__blinkFps = fps;
-      this.__blinkTone = null;
-      this.__blinkTone = this.tone().clone();
-      this.__blinkTone.red(0);
-      this.__blinkTone.green(0);
-      return this.__blinkTone.blue(0);
-    };
-
     Sprite.prototype.dispose = function(value) {
       if (value) {
         this.__isDisposed = value;
@@ -1735,13 +1879,11 @@
 
     function Sprite(width, height, x, y) {
       this.dispose = __bind(this.dispose, this);
-      this.blink = __bind(this.blink, this);
       this.clone = __bind(this.clone, this);
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
       this.append = __bind(this.append, this);
       this.tone = __bind(this.tone, this);
-      this.__updateBlink = __bind(this.__updateBlink, this);
       this.__updateImageData = __bind(this.__updateImageData, this);
       this.__updateCanvas = __bind(this.__updateCanvas, this);      this.__tone = null;
       this.__stage = null;
@@ -1752,9 +1894,6 @@
       this.__isDisposed = false;
       this.__imageChanged = false;
       this.__toneChanged = false;
-      this.__blinkCount = 0;
-      this.__blinkRGB = null;
-      this.__blinkTone = null;
       this.width(width);
       this.height(height);
       this.x(x);
@@ -2089,8 +2228,18 @@
       radius: 0
     };
 
+    Circle.prototype.isInside = function(x, y) {
+      return Math.pow(this.options.x - x, 2) + Math.pow(this.options.y - y, 2) <= options.radius * options.radius;
+    };
+
+    Circle.prototype.move = function(dx, dy) {
+      this.options.origin.x += dx;
+      return this.options.origin.y += dy;
+    };
+
     function Circle(origin, radius) {
-      this.options = {};
+      this.move = __bind(this.move, this);
+      this.isInside = __bind(this.isInside, this);      this.options = {};
       this.options.origin = origin;
       this.options.radius = radius;
     }
@@ -2115,8 +2264,19 @@
       }
     };
 
+    Line.prototype.isInside = function(x, y) {
+      return false;
+    };
+
+    Line.prototype.move = function(dx, dy) {
+      this.options.start.x += dx;
+      this.options.start.y += dy;
+      this.options.end.x += dx;
+      return this.options.end.y += dy;
+    };
+
     function Line(start, end) {
-      this.options = {};
+      this.move = __bind(this.move, this);      this.options = {};
       this.options.start = start;
       this.options.end = end;
     }
@@ -2139,8 +2299,21 @@
       height: 0
     };
 
+    Rect.prototype.isInside = function(x, y) {
+      if (x < this.options.start.x || x > this.options.start.x + this.options.start.width || y < this.options.start.y || y > this.options.start.y + this.options.start.height) {
+        false;
+      }
+      return true;
+    };
+
+    Rect.prototype.move = function(dx, dy) {
+      this.options.start.x += dx;
+      return this.options.start.y += dy;
+    };
+
     function Rect(start, width, height) {
-      this.options = {};
+      this.move = __bind(this.move, this);
+      this.isInside = __bind(this.isInside, this);      this.options = {};
       this.options.start = start;
       this.options.width = width;
       this.options.height = height;
