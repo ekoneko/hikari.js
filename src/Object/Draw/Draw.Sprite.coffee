@@ -1,11 +1,11 @@
 class Draw.Sprite extends Draw
+
+	zAutoIncrement = 0
 	
 	__drawType: 'sprite'
 
-	zAutoIncrement = 0
-
 	__tone: null	# Tone
-	__list: []
+	__bitmap: null
 	__canvas: null
 	__context: null
 	__imageData: null
@@ -13,24 +13,12 @@ class Draw.Sprite extends Draw
 	__imageChanged: off
 	__toneChanged: off
 
-	sort = (list)->
-		list.sort (a,b)->
-			a.z() > b.z()
-
 	__updateCanvas: ()=>
 		cache = @__canvas.getContext '2d'
 		cache.restore()
 		cache.save()
 		cache.clearRect 0, 0, @__width, @__height
-		@__list = sort @__list
-		i = 0
-		while item = @__list[i] 
-			unless item and item.__isDisposed
-				@__list.splice i, 1
-			else
-				item.update cache
-				i++
-
+		@__bitmap.update cache if @__bitmap and @__bitmap.dispose()
 		@__imageChanged = off
 		cache
 
@@ -58,14 +46,14 @@ class Draw.Sprite extends Draw
 			@__stage.needUpdate = on if @__stage
 		@__tone
 
-	append: (image)=>
-		return if image.type() isnt 'draw' and image.drawType() is 'sprite'
-		@__width = image.width() + image.x() unless @__width
-		@__height = image.height() + image.y() unless @__height
-		@z zAutoIncrement++
-		@__list.push image
-		@__imageChanged = on
-		@__stage.needUpdate = on if @__stage
+	bitmap: (image)=>
+		if image and image.type() is 'draw' and image.drawType() is 'bitmap'
+			@__width = image.width() + image.x() unless @__width
+			@__height = image.height() + image.y() unless @__height
+			@__bitmap = image
+			@__imageChanged = on
+			@__stage.needUpdate = on if @__stage
+		@__bitmap
 
 	draw: (stage)=>
 		@__stage = stage
@@ -101,7 +89,7 @@ class Draw.Sprite extends Draw
 	clone: ()=>
 		dest = new Draw.Sprite()
 		dest = super dest, this
-		dest.append item.clone() for item in @__list
+		dest.bitmap @__bitmap.clone()
 		dest
 
 	dispose: (value)=>
@@ -111,9 +99,9 @@ class Draw.Sprite extends Draw
 		@__isDisposed
 
 	constructor: (width, height, x, y)->
-		@__tone = null	# Tone
+		@__tone = null
 		@__stage = null
-		@__list = []
+		@__bitmap = null
 		@__canvas = null
 		@__context = null
 		@__imageData = null
@@ -124,3 +112,4 @@ class Draw.Sprite extends Draw
 		@height height
 		@x x
 		@y y
+		@z zAutoIncrement++

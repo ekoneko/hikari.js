@@ -1714,17 +1714,17 @@
   })(Draw);
 
   Draw.Sprite = (function(_super) {
-    var sort, zAutoIncrement;
+    var zAutoIncrement;
 
     __extends(Sprite, _super);
 
-    Sprite.prototype.__drawType = 'sprite';
-
     zAutoIncrement = 0;
+
+    Sprite.prototype.__drawType = 'sprite';
 
     Sprite.prototype.__tone = null;
 
-    Sprite.prototype.__list = [];
+    Sprite.prototype.__bitmap = null;
 
     Sprite.prototype.__canvas = null;
 
@@ -1738,28 +1738,15 @@
 
     Sprite.prototype.__toneChanged = false;
 
-    sort = function(list) {
-      return list.sort(function(a, b) {
-        return a.z() > b.z();
-      });
-    };
-
     Sprite.prototype.__updateCanvas = function() {
-      var cache, i, item;
+      var cache;
 
       cache = this.__canvas.getContext('2d');
       cache.restore();
       cache.save();
       cache.clearRect(0, 0, this.__width, this.__height);
-      this.__list = sort(this.__list);
-      i = 0;
-      while (item = this.__list[i]) {
-        if (!(item && item.__isDisposed)) {
-          this.__list.splice(i, 1);
-        } else {
-          item.update(cache);
-          i++;
-        }
+      if (this.__bitmap && this.__bitmap.dispose()) {
+        this.__bitmap.update(cache);
       }
       this.__imageChanged = false;
       return cache;
@@ -1795,22 +1782,21 @@
       return this.__tone;
     };
 
-    Sprite.prototype.append = function(image) {
-      if (image.type() !== 'draw' && image.drawType() === 'sprite') {
-        return;
+    Sprite.prototype.bitmap = function(image) {
+      if (image && image.type() === 'draw' && image.drawType() === 'bitmap') {
+        if (!this.__width) {
+          this.__width = image.width() + image.x();
+        }
+        if (!this.__height) {
+          this.__height = image.height() + image.y();
+        }
+        this.__bitmap = image;
+        this.__imageChanged = true;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
       }
-      if (!this.__width) {
-        this.__width = image.width() + image.x();
-      }
-      if (!this.__height) {
-        this.__height = image.height() + image.y();
-      }
-      this.z(zAutoIncrement++);
-      this.__list.push(image);
-      this.__imageChanged = true;
-      if (this.__stage) {
-        return this.__stage.needUpdate = true;
-      }
+      return this.__bitmap;
     };
 
     Sprite.prototype.draw = function(stage) {
@@ -1855,15 +1841,11 @@
     };
 
     Sprite.prototype.clone = function() {
-      var dest, item, _i, _len, _ref4;
+      var dest;
 
       dest = new Draw.Sprite();
       dest = Sprite.__super__.clone.call(this, dest, this);
-      _ref4 = this.__list;
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        item = _ref4[_i];
-        dest.append(item.clone());
-      }
+      dest.bitmap(this.__bitmap.clone());
       return dest;
     };
 
@@ -1882,12 +1864,12 @@
       this.clone = __bind(this.clone, this);
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
-      this.append = __bind(this.append, this);
+      this.bitmap = __bind(this.bitmap, this);
       this.tone = __bind(this.tone, this);
       this.__updateImageData = __bind(this.__updateImageData, this);
       this.__updateCanvas = __bind(this.__updateCanvas, this);      this.__tone = null;
       this.__stage = null;
-      this.__list = [];
+      this.__bitmap = null;
       this.__canvas = null;
       this.__context = null;
       this.__imageData = null;
@@ -1898,6 +1880,7 @@
       this.height(height);
       this.x(x);
       this.y(y);
+      this.z(zAutoIncrement++);
     }
 
     return Sprite;
