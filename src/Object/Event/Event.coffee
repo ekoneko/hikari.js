@@ -38,9 +38,10 @@ class Event extends Object
 	constructor: (eventType, condition, action)->
 		@map = @condition = @__action = null
 
-		@eventType = eventType
-		@condition = condition
 		@__action = action
+		@eventType = eventType
+		condition.button = 1 if eventType is 'click' and !condition.button
+		@condition = condition
 
 		@__id = Event.id++
 		Event.list[@__id] = this

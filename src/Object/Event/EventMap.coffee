@@ -43,9 +43,10 @@ class EventMap extends Object
 	__triggerClick: (action)=>
 		x = parseInt action.x / @grid, 10
 		y = parseInt action.y / @grid, 10
-		events = @mouseEvent[y][x].click[3].concat()
-		events = events.concat @mouseEvent[y][x].click[1] if action.button is 0
-		events = events.concat @mouseEvent[y][x].click[2] if action.button is 1
+		list = @mouseEvent[x][y].click
+		events = list[3].concat()
+		events = events.concat list[1] if action.button is 0
+		events = events.concat list[2] if action.button is 1
 
 		i = 0
 		while eventId = events[i]
@@ -59,7 +60,7 @@ class EventMap extends Object
 	__triggerHover: (action)=>
 		x = parseInt action.x / @grid, 10
 		y = parseInt action.y / @grid, 10
-		events = @mouseEvent[y][x].hover.concat()
+		events = @mouseEvent[x][y].hover.concat()
 
 		i = 0
 		while eventId = events[i]
@@ -78,6 +79,7 @@ class EventMap extends Object
 			@__exec events
 
 	__pushEvent: (stack, eventId)=>
+		return unless stack or stack.length
 		stack.push eventId
 		sortEvent stack
 
@@ -90,11 +92,13 @@ class EventMap extends Object
 			when 'hover'
 				scope = @__detectScope event.condition.scope
 				for item in scope
+					continue unless @mouseEvent[item[0]] and @mouseEvent[item[0]][item[1]]
 					@__pushEvent @mouseEvent[item[0]][item[1]].hover, event.__id
 			when 'click'
 				scope = @__detectScope event.condition.scope
 				event.condition.button = 1 unless event.condition.button
 				for item in scope
+					continue unless @mouseEvent[item[0]] and @mouseEvent[item[0]][item[1]]
 					@__pushEvent @mouseEvent[item[0]][item[1]].click[event.condition.button], event.__id
 		event.map = this
 		this
@@ -106,15 +110,15 @@ class EventMap extends Object
 				@keyEvent[event.condition].splice i, 1 if i > -1
 			when 'hover'
 				for lines in @mouseEvent
-					for event in lines
-						i = event.hover.indexOf event.__id
-						event.hover.splice i, 1 if i > -1
+					for item in lines
+						i = item.hover.indexOf event.__id
+						item.hover.splice i, 1 if i > -1
 			when 'click'
 				for lines in @mouseEvent
-					for event in lines
-						continue unless event.click[event.button] and event.click[event.button].length
-						i = event.click[event.button].indexOf event.__id
-						event.click[event.button].splice i, 1 if i > -1
+					for item in lines
+						continue unless item.click[event.condition.button] and item.click[event.condition.button].length
+						i = item.click[event.condition.button].indexOf event.__id
+						item.click[event.condition.button].splice i, 1 if i > -1
 
 
 	trigger: (type, action)=>
@@ -142,10 +146,10 @@ class EventMap extends Object
 		@grid = grid if grid
 		lineCount = Math.ceil width / @grid
 		rowCount = Math.ceil height / @grid
-		for r in [0...rowCount]
-			@mouseEvent[r] = new Array lineCount
-			for l in [0...lineCount]
-				@mouseEvent[r][l] =
+		for l in [0...lineCount]
+			@mouseEvent[l] = new Array rowCount
+			for r in [0...rowCount]
+				@mouseEvent[l][r] =
 					click:
 						'1': []	# 左键
 						'2': []	# 右键

@@ -140,6 +140,7 @@
 
     function Draw() {
       this.destroy = __bind(this.destroy, this);
+      this.dispose = __bind(this.dispose, this);
       this.clone = __bind(this.clone, this);
       this.options = __bind(this.options, this);
       this.update = __bind(this.update, this);
@@ -254,6 +255,16 @@
       return dest;
     };
 
+    Draw.prototype.dispose = function(value) {
+      if (value) {
+        this.__isDisposed = value;
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
+      }
+      return this.__isDisposed;
+    };
+
     Draw.prototype.destroy = function() {
       this.isDisposed = false;
       if (this.__stage) {
@@ -324,9 +335,12 @@
       this.revoke = __bind(this.revoke, this);
       this.exec = __bind(this.exec, this);
       this.move = __bind(this.move, this);      this.map = this.condition = this.__action = null;
-      this.eventType = eventType;
-      this.condition = condition;
       this.__action = action;
+      this.eventType = eventType;
+      if (eventType === 'click' && !condition.button) {
+        condition.button = 1;
+      }
+      this.condition = condition;
       this.__id = Event.id++;
       Event.list[this.__id] = this;
     }
@@ -396,16 +410,17 @@
     };
 
     EventMap.prototype.__triggerClick = function(action) {
-      var condition, eventId, events, i, x, y;
+      var condition, eventId, events, i, list, x, y;
 
       x = parseInt(action.x / this.grid, 10);
       y = parseInt(action.y / this.grid, 10);
-      events = this.mouseEvent[y][x].click[3].concat();
+      list = this.mouseEvent[x][y].click;
+      events = list[3].concat();
       if (action.button === 0) {
-        events = events.concat(this.mouseEvent[y][x].click[1]);
+        events = events.concat(list[1]);
       }
       if (action.button === 1) {
-        events = events.concat(this.mouseEvent[y][x].click[2]);
+        events = events.concat(list[2]);
       }
       i = 0;
       while (eventId = events[i]) {
@@ -424,7 +439,7 @@
 
       x = parseInt(action.x / this.grid, 10);
       y = parseInt(action.y / this.grid, 10);
-      events = this.mouseEvent[y][x].hover.concat();
+      events = this.mouseEvent[x][y].hover.concat();
       i = 0;
       while (eventId = events[i]) {
         condition = Event.list[eventId].condition;
@@ -454,6 +469,9 @@
     };
 
     EventMap.prototype.__pushEvent = function(stack, eventId) {
+      if (!(stack || stack.length)) {
+        return;
+      }
       stack.push(eventId);
       return sortEvent(stack);
     };
@@ -472,6 +490,9 @@
           scope = this.__detectScope(event.condition.scope);
           for (_i = 0, _len = scope.length; _i < _len; _i++) {
             item = scope[_i];
+            if (!(this.mouseEvent[item[0]] && this.mouseEvent[item[0]][item[1]])) {
+              continue;
+            }
             this.__pushEvent(this.mouseEvent[item[0]][item[1]].hover, event.__id);
           }
           break;
@@ -482,6 +503,9 @@
           }
           for (_j = 0, _len1 = scope.length; _j < _len1; _j++) {
             item = scope[_j];
+            if (!(this.mouseEvent[item[0]] && this.mouseEvent[item[0]][item[1]])) {
+              continue;
+            }
             this.__pushEvent(this.mouseEvent[item[0]][item[1]].click[event.condition.button], event.__id);
           }
       }
@@ -490,7 +514,7 @@
     };
 
     EventMap.prototype.revoke = function(event) {
-      var i, lines, _i, _j, _len, _len1, _ref2, _ref3, _results, _results1;
+      var i, item, lines, _i, _j, _len, _len1, _ref2, _ref3, _results, _results1;
 
       switch (event.eventType) {
         case 'keyPress':
@@ -509,10 +533,10 @@
 
               _results1 = [];
               for (_j = 0, _len1 = lines.length; _j < _len1; _j++) {
-                event = lines[_j];
-                i = event.hover.indexOf(event.__id);
+                item = lines[_j];
+                i = item.hover.indexOf(event.__id);
                 if (i > -1) {
-                  _results1.push(event.hover.splice(i, 1));
+                  _results1.push(item.hover.splice(i, 1));
                 } else {
                   _results1.push(void 0);
                 }
@@ -532,13 +556,13 @@
 
               _results2 = [];
               for (_k = 0, _len2 = lines.length; _k < _len2; _k++) {
-                event = lines[_k];
-                if (!(event.click[event.button] && event.click[event.button].length)) {
+                item = lines[_k];
+                if (!(item.click[event.condition.button] && item.click[event.condition.button].length)) {
                   continue;
                 }
-                i = event.click[event.button].indexOf(event.__id);
+                i = item.click[event.condition.button].indexOf(event.__id);
                 if (i > -1) {
-                  _results2.push(event.click[event.button].splice(i, 1));
+                  _results2.push(item.click[event.condition.button].splice(i, 1));
                 } else {
                   _results2.push(void 0);
                 }
@@ -591,10 +615,10 @@
       }
       lineCount = Math.ceil(width / this.grid);
       rowCount = Math.ceil(height / this.grid);
-      for (r = _i = 0; 0 <= rowCount ? _i < rowCount : _i > rowCount; r = 0 <= rowCount ? ++_i : --_i) {
-        this.mouseEvent[r] = new Array(lineCount);
-        for (l = _j = 0; 0 <= lineCount ? _j < lineCount : _j > lineCount; l = 0 <= lineCount ? ++_j : --_j) {
-          this.mouseEvent[r][l] = {
+      for (l = _i = 0; 0 <= lineCount ? _i < lineCount : _i > lineCount; l = 0 <= lineCount ? ++_i : --_i) {
+        this.mouseEvent[l] = new Array(rowCount);
+        for (r = _j = 0; 0 <= rowCount ? _j < rowCount : _j > rowCount; r = 0 <= rowCount ? ++_j : --_j) {
+          this.mouseEvent[l][r] = {
             click: {
               '1': [],
               '2': [],
@@ -692,11 +716,14 @@
   })();
 
   Stage = (function(_super) {
-    var colorMix, imageMix, list, sort;
+    var colorMix, imageMix, sort;
 
     __extends(Stage, _super);
 
-    list = [];
+    Stage.prototype.list = {
+      sprite: [],
+      vector: []
+    };
 
     Stage.prototype.__type = 'stage';
 
@@ -750,35 +777,16 @@
       return map;
     };
 
-    Stage.prototype.append = function(o) {
-      if (o.type() !== 'draw') {
-        console.log('error: object cannt append to canvas', o);
-        return;
-      }
-      if (['bitmap', 'sprite', 'vector'].indexOf(o.drawType() > -1)) {
-        list.push(o);
-      }
-      o.draw(this);
-      this.needUpdate = true;
-      return this;
-    };
+    Stage.prototype.__updateSprite = function() {
+      var i, imageData, item, list, map;
 
-    Stage.prototype.update = function() {
-      var i, imageData, item, map;
-
-      if (!this.needUpdate) {
-        return;
-      }
-      this.needUpdate = false;
-      this.context.restore();
-      this.context.save();
-      this.context.clearRect(0, 0, this.width, this.height);
+      list = this.list.sprite;
       list = sort(list);
-      i = 0;
       imageData = this.context.getImageData(0, 0, this.width, this.height);
       map = imageData.data;
+      i = 0;
       while (item = list[i]) {
-        if (item && item.__isDisposed) {
+        if (item && item.dispose()) {
           map = imageMix(map, item, this.width, this.height);
           i++;
         } else {
@@ -790,9 +798,59 @@
       return imageData = null;
     };
 
+    Stage.prototype.__updateVector = function() {
+      var i, item, list, _results;
+
+      list = this.list.vector;
+      list = sort(list);
+      i = 0;
+      _results = [];
+      while (item = list[i]) {
+        if (item && item.dispose()) {
+          item.update(this.context);
+          _results.push(i++);
+        } else {
+          _results.push(list.splice(i, 1));
+        }
+      }
+      return _results;
+    };
+
+    Stage.prototype.append = function(o) {
+      if (o.type() !== 'draw') {
+        console.log('error: object cannt append to canvas', o);
+        return;
+      }
+      if (o.drawType() === 'sprite') {
+        this.list.sprite.push(o);
+      } else if (o.drawType() === 'vector') {
+        this.list.vector.push(o);
+      }
+      o.draw(this);
+      this.needUpdate = true;
+      return this;
+    };
+
+    Stage.prototype.update = function() {
+      if (!this.needUpdate) {
+        return;
+      }
+      this.needUpdate = false;
+      this.context.restore();
+      this.context.save();
+      this.context.clearRect(0, 0, this.width, this.height);
+      this.__updateSprite();
+      return this.__updateVector();
+    };
+
     function Stage(width, height, container) {
       this.update = __bind(this.update, this);
-      this.append = __bind(this.append, this);      list = [];
+      this.append = __bind(this.append, this);
+      this.__updateVector = __bind(this.__updateVector, this);
+      this.__updateSprite = __bind(this.__updateSprite, this);      this.list = {
+        sprite: [],
+        vector: []
+      };
       this.width = width;
       this.height = height;
       this.canvas = document.createElement('canvas');
@@ -1668,13 +1726,6 @@
       return this.__context.drawImage(this.entity, this.__options.sourceX, this.__options.sourceY, this.__options.sourceWidth, this.__options.sourceHeight, this.__x, this.__y, this.__width, this.__height);
     };
 
-    Bitmap.prototype.dispose = function(value) {
-      if (value) {
-        this.__isDisposed = value;
-      }
-      return this.__isDisposed;
-    };
-
     Bitmap.prototype.destroy = function() {
       delete this.entity;
       return Bitmap.__super__.destroy.call(this);
@@ -1682,7 +1733,6 @@
 
     function Bitmap(width, height) {
       this.destroy = __bind(this.destroy, this);
-      this.dispose = __bind(this.dispose, this);
       this.update = __bind(this.update, this);
       this.clone = __bind(this.clone, this);
       this.draw = __bind(this.draw, this);
@@ -1849,18 +1899,7 @@
       return dest;
     };
 
-    Sprite.prototype.dispose = function(value) {
-      if (value) {
-        this.__isDisposed = value;
-        if (this.__stage) {
-          this.__stage.needUpdate = true;
-        }
-      }
-      return this.__isDisposed;
-    };
-
     function Sprite(width, height, x, y) {
-      this.dispose = __bind(this.dispose, this);
       this.clone = __bind(this.clone, this);
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
@@ -1898,21 +1937,23 @@
       lineWidth: 1,
       strokeStyle: 'black',
       lineCap: 'butt',
-      fillStyle: 'black'
+      fillStyle: 'black',
+      alpha: 1
     };
 
     Vector.prototype.vector = [];
 
     Vector.prototype.__updateLine = function(vector) {
-      this.__context.moveTo(vector.options.start.x, vector.options.start.y);
-      return this.__context.lineTo(vector.options.end.x, vector.options.end.y);
+      this.__context.moveTo(vector.options.start.x + this.__x, vector.options.start.y + this.__y);
+      return this.__context.lineTo(vector.options.end.x + this.__x, vector.options.end.y + this.__y);
     };
 
     Vector.prototype.__updateRect = function(vector) {
-      return this.__context.rect(vector.options.start.x, vector.options.start.y, vector.options.width, vector.options.height);
+      return this.__context.rect(vector.options.start.x + this.__x, vector.options.start.y + this.__y, vector.options.width, vector.options.height);
     };
 
     Vector.prototype.draw = function(stage) {
+      this.__stage = stage;
       if (stage) {
         this.__context = stage.context;
       }
@@ -1942,9 +1983,11 @@
       this.__context.strokeStyle = this.__options.strokeStyle;
       this.__context.lineCap = this.__options.lineCap;
       this.__context.fillStyle = this.__options.fillStyle;
+      this.__context.globalAlpha = this.__options.alpha;
       this.__context.closePath();
       this.__context.stroke();
-      return this.__context.fill();
+      this.__context.fill();
+      return this.__context.globalAlpha = 1;
     };
 
     Vector.prototype.append = function(v) {
@@ -1957,7 +2000,7 @@
       return this;
     };
 
-    function Vector() {
+    function Vector(x, y) {
       this.append = __bind(this.append, this);
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
@@ -1968,8 +2011,11 @@
         lineWidth: 1,
         strokeStyle: 'black',
         lineCap: 'butt',
-        fillStyle: 'black'
+        fillStyle: 'black',
+        alpha: 1
       };
+      this.x(x);
+      this.y(y);
     }
 
     return Vector;
@@ -2291,7 +2337,8 @@
 
     Rect.prototype.move = function(dx, dy) {
       this.options.start.x += dx;
-      return this.options.start.y += dy;
+      this.options.start.y += dy;
+      return this;
     };
 
     function Rect(start, width, height) {

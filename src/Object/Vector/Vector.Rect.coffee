@@ -19,6 +19,7 @@ class Vector.Rect extends Vector
 	move: (dx, dy)=>
 		@options.start.x += dx
 		@options.start.y += dy
+		this
 
 	constructor: (start, width, height) ->
 		@options = {}
