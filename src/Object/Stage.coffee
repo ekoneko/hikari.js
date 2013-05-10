@@ -55,7 +55,7 @@ class Stage extends Object
 				list.splice i, 1
 		imageData.data = map
 		@context.putImageData imageData, 0, 0
-		imageData = null
+		imageData = undefined
 
 	__updateVector: ()=>
 		list = @list.vector

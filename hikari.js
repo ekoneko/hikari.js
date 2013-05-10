@@ -28,10 +28,15 @@
     };
 
     Hikari.prototype.__init = function() {
+      var _ref;
+
       global();
+      if ((_ref = window.requestAnimationFrame) == null) {
+        window.requestAnimationFrame = window.mozRequestAnimationFrame;
+      }
       return this.__delay = function(callback) {
         return setTimeout(function() {
-          return callback();
+          return window.requestAnimationFrame(callback);
         }, this.times);
       };
     };
@@ -795,7 +800,7 @@
       }
       imageData.data = map;
       this.context.putImageData(imageData, 0, 0);
-      return imageData = null;
+      return imageData = void 0;
     };
 
     Stage.prototype.__updateVector = function() {
@@ -2228,14 +2233,14 @@
       dom.addEventListener('mousedown', function(event) {
         return _this.click = {
           button: event.button,
-          x: event.offsetX,
-          y: event.offsetY
+          x: event.offsetX || event.layerX,
+          y: event.offsetY || event.layerY
         };
       });
       dom.addEventListener('mouseover', function(event) {
         return _this.position = {
-          x: event.offsetX,
-          y: event.offsetY
+          x: event.offsetX || event.layerX,
+          y: event.offsetY || event.layerY
         };
       });
     }

@@ -9,10 +9,10 @@ class Input.Mouse extends Input
 		dom.addEventListener 'mousedown', (event)=>
 			@click =
 				button: event.button	# 0-left| 1-right
-				x: event.offsetX
-				y: event.offsetY
+				x: event.offsetX or event.layerX
+				y: event.offsetY or event.layerY
 
 		dom.addEventListener 'mouseover', (event)=>
 			@position =
-				x: event.offsetX
-				y: event.offsetY
+				x: event.offsetX or event.layerX
+				y: event.offsetY or event.layerY

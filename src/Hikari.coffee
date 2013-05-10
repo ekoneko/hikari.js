@@ -19,9 +19,10 @@ class @Hikari
 
 	__init: =>
 		global()
+		window.requestAnimationFrame ?= window.mozRequestAnimationFrame
 		@__delay = (callback)->
 			setTimeout ()->
-				callback()
+				window.requestAnimationFrame callback
 			, @times
 
 	__loadResources: =>
