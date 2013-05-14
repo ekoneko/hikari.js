@@ -19,7 +19,10 @@ class @Hikari
 
 	__init: =>
 		global()
-		window.requestAnimationFrame ?= window.mozRequestAnimationFrame
+		window.requestAnimationFrame ?= window.requestAnimationFrame or
+		window.mozRequestAnimationFrame or
+		window.webkitRequestAnimationFrame or
+		window.msRequestAnimationFrame
 		@__delay = (callback)->
 			setTimeout ()->
 				window.requestAnimationFrame callback
@@ -28,14 +31,15 @@ class @Hikari
 	__loadResources: =>
 		# TODO
 
-	update: ()=>
+	__update: ()=>
 		@stage.update()
 		@input.update()
-		@__delay @update
+		@update() if typeof @update is 'function'
+		@__delay @__update
 			
 
 	constructor: (container, width, height, callback)->
-		@__delay = null
+		@__delay = @update = null
 		@fps = 30
 		@times = 1000 / 30
 
@@ -50,6 +54,6 @@ class @Hikari
 		# load resources
 		@__loadResources()
 
-		@update()
+		@__update()
 
 		callback this if typeof callback is 'function'
