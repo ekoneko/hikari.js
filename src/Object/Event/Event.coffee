@@ -30,10 +30,9 @@ class Event extends Object
 	exec: (next)=>
 		@__action next
 
-	revoke: ()=>
-		return off unless @map
-		@map.revoke this
-		true
+	destory: ()=>
+		@map.revoke this if @map
+		super()
 
 	constructor: (eventType, condition, action)->
 		@map = @condition = @__action = null

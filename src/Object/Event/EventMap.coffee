@@ -119,6 +119,7 @@ class EventMap extends Object
 						continue unless item.click[event.condition.button] and item.click[event.condition.button].length
 						i = item.click[event.condition.button].indexOf event.__id
 						item.click[event.condition.button].splice i, 1 if i > -1
+		this
 
 
 	trigger: (type, action)=>
