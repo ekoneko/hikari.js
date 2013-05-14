@@ -32,7 +32,7 @@
 
       global();
       if ((_ref = window.requestAnimationFrame) == null) {
-        window.requestAnimationFrame = window.mozRequestAnimationFrame;
+        window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
       }
       return this.__delay = function(callback) {
         return setTimeout(function() {
@@ -43,16 +43,19 @@
 
     Hikari.prototype.__loadResources = function() {};
 
-    Hikari.prototype.update = function() {
+    Hikari.prototype.__update = function() {
       this.stage.update();
       this.input.update();
-      return this.__delay(this.update);
+      if (typeof this.update === 'function') {
+        this.update();
+      }
+      return this.__delay(this.__update);
     };
 
     function Hikari(container, width, height, callback) {
-      this.update = __bind(this.update, this);
+      this.__update = __bind(this.__update, this);
       this.__loadResources = __bind(this.__loadResources, this);
-      this.__init = __bind(this.__init, this);      this.__delay = null;
+      this.__init = __bind(this.__init, this);      this.__delay = this.update = null;
       this.fps = 30;
       this.times = 1000 / 30;
       this.__init();
@@ -60,7 +63,7 @@
       this.eventMap = new EventMap(width, height);
       this.input = new Input(this.stage, this.eventMap);
       this.__loadResources();
-      this.update();
+      this.__update();
       if (typeof callback === 'function') {
         callback(this);
       }
@@ -233,13 +236,13 @@
 
     Draw.prototype.update = function() {};
 
-    Draw.prototype.options = function(o) {
+    Draw.prototype.options = function(options) {
       var key;
 
-      if (typeof o === 'object') {
-        for (key in o) {
+      if (typeof options === 'object') {
+        for (key in options) {
           if (typeof this.__options[key] !== 'undefined') {
-            this.__options[key] = o[key];
+            this.__options[key] = options[key];
           }
         }
         if (this.__stage) {
@@ -1671,10 +1674,6 @@
     Bitmap.prototype.__context = null;
 
     Bitmap.prototype.__options = {
-      sourceX: 0,
-      sourceY: 0,
-      sourceWidth: 0,
-      sourceHeight: 0,
       scaleX: 1,
       scaleY: 1,
       alpha: 1,
@@ -1688,10 +1687,8 @@
 
       this.entity = new Image();
       this.entity.onload = function() {
-        _this.options({
-          sourceWidth: _this.entity.width,
-          sourceHeight: _this.entity.height
-        });
+        _this.__width = _this.entity.width;
+        _this.__height = _this.entity.height;
         if (typeof callback === 'function') {
           return callback(_this);
         }
@@ -1718,17 +1715,29 @@
       return Bitmap.__super__.clone.call(this, newBitmap, this);
     };
 
-    Bitmap.prototype.update = function(_context) {
+    Bitmap.prototype.update = function(_context, x, y, width, height) {
       if (_context) {
         this.__context = _context;
       }
       if (!(this.__isDisposed && this.__context)) {
         return false;
       }
+      if (x == null) {
+        x = 0;
+      }
+      if (y == null) {
+        y = 0;
+      }
+      if (width == null) {
+        width = this.__width;
+      }
+      if (height == null) {
+        height = this.__height;
+      }
       this.__context.globalAlpha = this.__options.alpha;
       this.__context.scale(this.__options.scaleX, this.__options.scaleY);
       this.__context.rotate(this.__options.rotate);
-      return this.__context.drawImage(this.entity, this.__options.sourceX, this.__options.sourceY, this.__options.sourceWidth, this.__options.sourceHeight, this.__x, this.__y, this.__width, this.__height);
+      return this.__context.drawImage(this.entity, x, y, width, height, this.__x, this.__y, this.__width, this.__height);
     };
 
     Bitmap.prototype.destroy = function() {
@@ -1793,6 +1802,13 @@
 
     Sprite.prototype.__toneChanged = false;
 
+    Sprite.prototype.__options = {
+      bx: 0,
+      by: 0,
+      bw: 0,
+      bh: 0
+    };
+
     Sprite.prototype.__updateCanvas = function() {
       var cache;
 
@@ -1837,15 +1853,27 @@
       return this.__tone;
     };
 
-    Sprite.prototype.bitmap = function(image) {
-      if (image && image.type() === 'draw' && image.drawType() === 'bitmap') {
+    Sprite.prototype.bitmap = function(bitmap, x, y, width, height) {
+      if (bitmap && bitmap.type() === 'draw' && bitmap.drawType() === 'bitmap') {
+        if (x) {
+          this.__options.bx = x;
+        }
+        if (y) {
+          this.__options.by = y;
+        }
+        if (width) {
+          this.__options.bw = width;
+        }
+        if (height) {
+          this.__options.bh = height;
+        }
         if (!this.__width) {
-          this.__width = image.width() + image.x();
+          this.__width = this.__options.bw || bitmap.width();
         }
         if (!this.__height) {
-          this.__height = image.height() + image.y();
+          this.__height = this.__options.bh || bitmap.height();
         }
-        this.__bitmap = image;
+        this.__bitmap = bitmap;
         this.__imageChanged = true;
         if (this.__stage) {
           this.__stage.needUpdate = true;
@@ -1911,15 +1939,14 @@
       this.bitmap = __bind(this.bitmap, this);
       this.tone = __bind(this.tone, this);
       this.__updateImageData = __bind(this.__updateImageData, this);
-      this.__updateCanvas = __bind(this.__updateCanvas, this);      this.__tone = null;
-      this.__stage = null;
-      this.__bitmap = null;
-      this.__canvas = null;
-      this.__context = null;
-      this.__imageData = null;
-      this.__isDisposed = false;
-      this.__imageChanged = false;
-      this.__toneChanged = false;
+      this.__updateCanvas = __bind(this.__updateCanvas, this);      this.__tone = this.__stage = this.__bitmap = this.__canvas = this.__context = this.__imageData = null;
+      this.__isDisposed = this.__imageChanged = this.__toneChanged = false;
+      this.__options = {
+        bx: 0,
+        by: 0,
+        bw: 0,
+        bh: 0
+      };
       this.width(width);
       this.height(height);
       this.x(x);

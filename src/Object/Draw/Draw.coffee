@@ -47,11 +47,11 @@ class Draw extends Object
 
 	update: ()=>
 
-	options: (o)=>
-		if typeof o is 'object'
-			for key of o
+	options: (options)=>
+		if typeof options is 'object'
+			for key of options
 				unless typeof @__options[key] is 'undefined'
-					@__options[key] = o[key]
+					@__options[key] = options[key]
 			@__stage.needUpdate = on if @__stage
 		@__options
 

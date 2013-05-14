@@ -12,13 +12,19 @@ class Draw.Sprite extends Draw
 	__isDisposed: off
 	__imageChanged: off
 	__toneChanged: off
+	__options:
+		bx: 0	# bitmap x
+		by: 0	# bitmap y
+		bw: 0	# bitmap width
+		bh: 0	# bitmap height
 
 	__updateCanvas: ()=>
 		cache = @__canvas.getContext '2d'
 		cache.restore()
 		cache.save()
 		cache.clearRect 0, 0, @__width, @__height
-		@__bitmap.update cache if @__bitmap and @__bitmap.dispose()
+		if @__bitmap and @__bitmap.dispose()
+			@__bitmap.update cache
 		@__imageChanged = off
 		cache
 
@@ -46,11 +52,16 @@ class Draw.Sprite extends Draw
 			@__stage.needUpdate = on if @__stage
 		@__tone
 
-	bitmap: (image)=>
-		if image and image.type() is 'draw' and image.drawType() is 'bitmap'
-			@__width = image.width() + image.x() unless @__width
-			@__height = image.height() + image.y() unless @__height
-			@__bitmap = image
+	bitmap: (bitmap, x, y, width, height)=>
+		if bitmap and bitmap.type() is 'draw' and bitmap.drawType() is 'bitmap'
+			@__options.bx = x if x
+			@__options.by = y if y
+			@__options.bw = width if width
+			@__options.bh = height if height
+
+			@__width = @__options.bw or bitmap.width() unless @__width
+			@__height = @__options.bh or bitmap.height() unless @__height
+			@__bitmap = bitmap
 			@__imageChanged = on
 			@__stage.needUpdate = on if @__stage
 		@__bitmap
@@ -93,15 +104,14 @@ class Draw.Sprite extends Draw
 		dest
 
 	constructor: (width, height, x, y)->
-		@__tone = null
-		@__stage = null
-		@__bitmap = null
-		@__canvas = null
-		@__context = null
-		@__imageData = null
-		@__isDisposed = off
-		@__imageChanged = off
-		@__toneChanged = off
+		@__tone = @__stage = @__bitmap = @__canvas = @__context = @__imageData = null
+		@__isDisposed = @__imageChanged = @__toneChanged = off
+		@__options =
+			bx: 0
+			by: 0
+			bw: 0
+			bh: 0
+
 		@width width
 		@height height
 		@x x
