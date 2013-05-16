@@ -1,2 +1,6 @@
 test/*
 node_modules/*
+
+hikari.full.js
+
+hikari.min.js

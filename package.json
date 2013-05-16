@@ -1,11 +1,15 @@
 {
   "name": "mycard.user.js",
   "version": "0.1.0",
+  "dependencies": {
+    "socket.io-client": "git://github.com/LearnBoost/socket.io-client.git"
+  },
   "devDependencies": {
     "grunt": "*",
     "grunt-contrib-coffee": "*",
     "grunt-contrib-watch": "*",
     "grunt-contrib-concat": "*",
-    "grunt-contrib-copy": "*"
+    "grunt-contrib-copy": "*",
+    "grunt-contrib-uglify": "*"
   }
 }

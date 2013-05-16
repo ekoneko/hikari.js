@@ -31,8 +31,19 @@ npm install
 
 根目录下执行
 ```
-grunt   # 负责编译coffee/合并文件/监听改动
+grunt   # 编译生成hikari.js
+
+grunt package	# 生成hikari.min.js和hikari.pkg.js
 ```
+
+#### hikari.js
+编译后生成的js文件
+
+#### hikari.min.js
+压缩后的js文件
+
+#### hikari.pkg.js
+压缩并合并了依赖包的js文件
 
 ## 结构
 

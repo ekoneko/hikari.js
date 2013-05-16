@@ -1,5 +1,5 @@
 (function() {
-  var Audio, Const, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Unit, Vector, _ref, _ref1, _ref2, _ref3,
+  var Audio, Const, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -331,16 +331,15 @@
       return this.__action(next);
     };
 
-    Event.prototype.revoke = function() {
-      if (!this.map) {
-        return false;
+    Event.prototype.destory = function() {
+      if (this.map) {
+        this.map.revoke(this);
       }
-      this.map.revoke(this);
-      return true;
+      return Event.__super__.destory.call(this);
     };
 
     function Event(eventType, condition, action) {
-      this.revoke = __bind(this.revoke, this);
+      this.destory = __bind(this.destory, this);
       this.exec = __bind(this.exec, this);
       this.move = __bind(this.move, this);      this.map = this.condition = this.__action = null;
       this.__action = action;
@@ -522,64 +521,45 @@
     };
 
     EventMap.prototype.revoke = function(event) {
-      var i, item, lines, _i, _j, _len, _len1, _ref2, _ref3, _results, _results1;
+      var i, item, lines, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref2, _ref3;
 
       switch (event.eventType) {
         case 'keyPress':
           i = this.keyEvent[event.condition].indexOf(event.__id);
           if (i > -1) {
-            return this.keyEvent[event.condition].splice(i, 1);
+            this.keyEvent[event.condition].splice(i, 1);
           }
           break;
         case 'hover':
           _ref2 = this.mouseEvent;
-          _results = [];
           for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
             lines = _ref2[_i];
-            _results.push((function() {
-              var _j, _len1, _results1;
-
-              _results1 = [];
-              for (_j = 0, _len1 = lines.length; _j < _len1; _j++) {
-                item = lines[_j];
-                i = item.hover.indexOf(event.__id);
-                if (i > -1) {
-                  _results1.push(item.hover.splice(i, 1));
-                } else {
-                  _results1.push(void 0);
-                }
+            for (_j = 0, _len1 = lines.length; _j < _len1; _j++) {
+              item = lines[_j];
+              i = item.hover.indexOf(event.__id);
+              if (i > -1) {
+                item.hover.splice(i, 1);
               }
-              return _results1;
-            })());
+            }
           }
-          return _results;
           break;
         case 'click':
           _ref3 = this.mouseEvent;
-          _results1 = [];
-          for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
-            lines = _ref3[_j];
-            _results1.push((function() {
-              var _k, _len2, _results2;
-
-              _results2 = [];
-              for (_k = 0, _len2 = lines.length; _k < _len2; _k++) {
-                item = lines[_k];
-                if (!(item.click[event.condition.button] && item.click[event.condition.button].length)) {
-                  continue;
-                }
-                i = item.click[event.condition.button].indexOf(event.__id);
-                if (i > -1) {
-                  _results2.push(item.click[event.condition.button].splice(i, 1));
-                } else {
-                  _results2.push(void 0);
-                }
+          for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+            lines = _ref3[_k];
+            for (_l = 0, _len3 = lines.length; _l < _len3; _l++) {
+              item = lines[_l];
+              if (!(item.click[event.condition.button] && item.click[event.condition.button].length)) {
+                continue;
               }
-              return _results2;
-            })());
+              i = item.click[event.condition.button].indexOf(event.__id);
+              if (i > -1) {
+                item.click[event.condition.button].splice(i, 1);
+              }
+            }
           }
-          return _results1;
       }
+      return this;
     };
 
     EventMap.prototype.trigger = function(type, action) {
@@ -716,12 +696,14 @@
 
   })(Object);
 
-  Network = (function() {
+  Network = (function(_super) {
+    __extends(Network, _super);
+
     function Network() {}
 
     return Network;
 
-  })();
+  })(Object);
 
   Stage = (function(_super) {
     var colorMix, imageMix, sort;
@@ -888,43 +870,6 @@
     return Store;
 
   })();
-
-  Unit = (function(_super) {
-    __extends(Unit, _super);
-
-    Unit.prototype.__type = 'unit';
-
-    Unit.prototype.scope = null;
-
-    Unit.prototype.sprite = null;
-
-    Unit.prototype.event = [];
-
-    Unit.prototype.addEvent = function(event) {
-      if (event.type() === 'event') {
-        this.event.push(event);
-        return true;
-      }
-      return false;
-    };
-
-    Unit.prototype.move = function(x, y) {
-      if (this.sprite) {
-        this.sprite.x(this.sprite.x() + x);
-        return this.sprite.y(this.sprite.y() + y);
-      }
-    };
-
-    function Unit(options) {
-      this.move = __bind(this.move, this);
-      this.addEvent = __bind(this.addEvent, this);      this.scope = this.sprite = null;
-      this.event = [];
-      this.set(options);
-    }
-
-    return Unit;
-
-  })(Object);
 
   Vector = (function(_super) {
     __extends(Vector, _super);
