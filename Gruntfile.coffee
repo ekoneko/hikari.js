@@ -4,6 +4,7 @@ module.exports = (grunt)->
 			default:
 				options:
 					join: on
+					sourceMap: on
 				files:
 					"hikari.js" : ['src/*.coffee', 'src/Object/Object.coffee', 'src/**/*.coffee', '!src/**/*.*.coffee', 'src/**/*.*.coffee']
 					"test/test.js" : "test/*.coffee"
@@ -34,4 +35,5 @@ module.exports = (grunt)->
 	grunt.loadNpmTasks 'grunt-contrib-uglify'
 
 	grunt.registerTask 'default', ['coffee', 'copy', 'watch']
+	grunt.registerTask 'nw', ['coffee', 'copy']
 	grunt.registerTask 'package', ['coffee', 'uglify:package', 'concat:package']
