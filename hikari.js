@@ -1,5 +1,5 @@
 (function() {
-  var Audio, Const, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
+  var Animate, Audio, Const, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -107,6 +107,22 @@
     return Object;
 
   })();
+
+  Animate = (function(_super) {
+    __extends(Animate, _super);
+
+    /*
+    		entity: sprite
+    */
+
+
+    function Animate(sprite) {
+      this.entity = sprite;
+    }
+
+    return Animate;
+
+  })(Object);
 
   Audio = (function() {
     function Audio() {}
@@ -286,6 +302,8 @@
   })(Object);
 
   Event = (function(_super) {
+    var init;
+
     __extends(Event, _super);
 
     Event.id = 1;
@@ -294,28 +312,24 @@
 
     Event.prototype.__type = 'event';
 
-    Event.prototype.__id = 0;
+    init = function(self) {
+      self.__id = Event.id++;
+      self.__action = null;
+      /*
+      		# condition
+      		# 	keyPress:
+      		#		(int)identity
+      		#
+      		# 	hover || click
+      		#		scope(Rect|Circle)
+      		#		button(1|2|3)
+      */
 
-    Event.prototype.__action = null;
-
-    Event.prototype.eventType = '';
-
-    /*
-    	# @condition
-    	# 	keyPress:
-    	#		(int)identity
-    	#
-    	# 	hover || click
-    	#		scope(Rect|Circle)
-    	#		button(1|2|3)
-    */
-
-
-    Event.prototype.condition = null;
-
-    Event.prototype.map = null;
-
-    Event.prototype.priority = 0;
+      self.condition = null;
+      self.eventType = '';
+      self.map = null;
+      return self.priority = 0;
+    };
 
     Event.prototype.move = function(dx, dy) {
       if (!this.condition.scope) {
@@ -341,14 +355,13 @@
     function Event(eventType, condition, action) {
       this.destory = __bind(this.destory, this);
       this.exec = __bind(this.exec, this);
-      this.move = __bind(this.move, this);      this.map = this.condition = this.__action = null;
+      this.move = __bind(this.move, this);      init(this);
       this.__action = action;
       this.eventType = eventType;
       if (eventType === 'click' && !condition.button) {
         condition.button = 1;
       }
       this.condition = condition;
-      this.__id = Event.id++;
       Event.list[this.__id] = this;
     }
 
@@ -357,19 +370,17 @@
   })(Object);
 
   EventMap = (function(_super) {
-    var sortEvent;
+    var init, sortEvent;
 
     __extends(EventMap, _super);
 
-    EventMap.prototype.width = 0;
-
-    EventMap.prototype.height = 0;
-
-    EventMap.prototype.keyEvent = {};
-
-    EventMap.prototype.grid = 50;
-
-    EventMap.prototype.mouseEvent = [];
+    init = function(self) {
+      self.width = 0;
+      self.height = 0;
+      self.grid = 50;
+      self.keyEvent = {};
+      return self.mouseEvent = [];
+    };
 
     sortEvent = function(array) {
       return array = array.sort(function(a, b) {
@@ -594,10 +605,7 @@
       this.__detectScope = __bind(this.__detectScope, this);
       var l, lineCount, r, rowCount, _i, _j;
 
-      this.width = width;
-      this.height = height;
-      this.keyEvent = {};
-      this.mouseEvent = [];
+      init(this);
       if (grid) {
         this.grid = grid;
       }
@@ -699,7 +707,12 @@
   Network = (function(_super) {
     __extends(Network, _super);
 
-    function Network() {}
+    Network.prototype.socket = null;
+
+    function Network(address, callback) {
+      this.socket = null;
+      this.socket = new io.connect(address);
+    }
 
     return Network;
 
@@ -875,7 +888,7 @@
     __extends(Vector, _super);
 
     function Vector() {
-      this.setOptions = __bind(this.setOptions, this);
+      this.options = __bind(this.options, this);
       this.move = __bind(this.move, this);
       this.isInside = __bind(this.isInside, this);
       this.vectorType = __bind(this.vectorType, this);      _ref3 = Vector.__super__.constructor.apply(this, arguments);
@@ -883,6 +896,8 @@
     }
 
     Vector.prototype.__type = 'vector';
+
+    Vector.prototype.__options = {};
 
     Vector.prototype.vectorType = function() {
       return this.__vectorType;
@@ -892,15 +907,17 @@
 
     Vector.prototype.move = function(dx, dy) {};
 
-    Vector.prototype.setOptions = function(_options) {
+    Vector.prototype.options = function(_options) {
       var key;
 
-      for (key in _options) {
-        if (typeof this.options[key] !== 'undefined') {
-          this.options[key] = _options[key];
+      if (_options) {
+        for (key in _options) {
+          if (typeof this.__options[key] !== 'undefined') {
+            this.__options[key] = _options[key];
+          }
         }
       }
-      return true;
+      return this.__options;
     };
 
     return Vector;
@@ -1327,17 +1344,19 @@
   };
 
   DataType.Color = (function(_super) {
-    var dec2hex, hex2dec, scope,
+    var dec2hex, hex2dec, init, scope,
       _this = this;
 
     __extends(Color, _super);
 
     Color.prototype.__dataType = 'color';
 
-    Color.prototype.__options = {
-      r: 0,
-      g: 0,
-      b: 0
+    init = function(self) {
+      return self.__options = {
+        r: 0,
+        g: 0,
+        b: 0
+      };
     };
 
     hex2dec = function(hex) {
@@ -1434,11 +1453,7 @@
       this.blue = __bind(this.blue, this);
       this.green = __bind(this.green, this);
       this.red = __bind(this.red, this);
-      this.getRGB = __bind(this.getRGB, this);      this.__options = {
-        r: 0,
-        g: 0,
-        b: 0
-      };
+      this.getRGB = __bind(this.getRGB, this);      init(this);
       if (r[0] === '#') {
         this.set(r);
       } else {
@@ -1455,24 +1470,25 @@
   }).call(this, DataType);
 
   DataType.Tone = (function(_super) {
-    var scope,
+    var init, scope,
       _this = this;
 
     __extends(Tone, _super);
 
     Tone.prototype.__dataType = 'tone';
 
-    Tone.prototype.__options = {
-      r: 0,
-      g: 0,
-      b: 0,
-      alpha: 1,
-      gray: false,
-      opposite: false,
-      transparent: null
+    init = function(self) {
+      self.__options = {
+        r: 0,
+        g: 0,
+        b: 0,
+        alpha: 1,
+        gray: false,
+        opposite: false,
+        transparent: null
+      };
+      return self.noChange = true;
     };
-
-    Tone.prototype.noChange = true;
 
     scope = function(value, min, max) {
       return Math.max(min, Math.min(value, max));
@@ -1593,8 +1609,7 @@
       this.alpha = __bind(this.alpha, this);
       this.blue = __bind(this.blue, this);
       this.green = __bind(this.green, this);
-      this.red = __bind(this.red, this);      this.__options = {};
-      this.reset();
+      this.red = __bind(this.red, this);      init(this);
       options = options || {};
       this.red(options.r);
       this.green(options.g);
@@ -1610,22 +1625,29 @@
   }).call(this, DataType);
 
   Draw.Bitmap = (function(_super) {
+    var init;
+
     __extends(Bitmap, _super);
 
     Bitmap.prototype.__drawType = 'bitmap';
 
-    Bitmap.prototype.__isDisposed = true;
-
-    Bitmap.prototype.__context = null;
-
-    Bitmap.prototype.__options = {
-      scaleX: 1,
-      scaleY: 1,
-      alpha: 1,
-      rotate: 0
+    init = function(self) {
+      self.__isDisposed = true;
+      self.__context = null;
+      self.__options = {
+        sourceX: 0,
+        sourceY: 0,
+        sourceWidth: 0,
+        sourceHeight: 0,
+        transX: 0,
+        transY: 0,
+        scaleX: 1,
+        scaleY: 1,
+        alpha: 1,
+        rotate: 0
+      };
+      return self.entity = null;
     };
-
-    Bitmap.prototype.entity = null;
 
     Bitmap.prototype.load = function(src, callback) {
       var _this = this;
@@ -1698,21 +1720,7 @@
       this.load = __bind(this.load, this);
       var nextUpdate;
 
-      this.__options = {
-        sourceX: 0,
-        sourceY: 0,
-        sourceWidth: 0,
-        sourceHeight: 0,
-        transX: 0,
-        transY: 0,
-        scaleX: 1,
-        scaleY: 1,
-        alpha: 1,
-        rotate: 0
-      };
-      this.__stage = null;
-      this.entity = null;
-      this.__context = null;
+      init(this);
       this.width(width);
       this.height(height);
       nextUpdate = this.frequency;
@@ -1904,21 +1912,23 @@
   })(Draw);
 
   Draw.Vector = (function(_super) {
+    var init;
+
     __extends(Vector, _super);
 
     Vector.prototype.__drawType = 'vector';
 
-    Vector.prototype.__isDisposed = true;
-
-    Vector.prototype.__options = {
-      lineWidth: 1,
-      strokeStyle: 'black',
-      lineCap: 'butt',
-      fillStyle: 'black',
-      alpha: 1
+    init = function(self) {
+      self.__isDisposed = true;
+      self.__options = {
+        lineWidth: 1,
+        strokeStyle: 'black',
+        lineCap: 'butt',
+        fillStyle: 'black',
+        alpha: 1
+      };
+      return self.vector = [];
     };
-
-    Vector.prototype.vector = [];
 
     Vector.prototype.__updateLine = function(vector) {
       this.__context.moveTo(vector.options.start.x + this.__x, vector.options.start.y + this.__y);
@@ -1982,15 +1992,7 @@
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
       this.__updateRect = __bind(this.__updateRect, this);
-      this.__updateLine = __bind(this.__updateLine, this);      this.vector = [];
-      this.__stage = null;
-      this.__options = {
-        lineWidth: 1,
-        strokeStyle: 'black',
-        lineCap: 'butt',
-        fillStyle: 'black',
-        alpha: 1
-      };
+      this.__updateLine = __bind(this.__updateLine, this);      init(this);
       this.x(x);
       this.y(y);
     }
@@ -2000,25 +2002,30 @@
   })(Draw);
 
   HTML.BLOCK = (function(_super) {
+    var init;
+
     __extends(BLOCK, _super);
 
     BLOCK.prototype.__htmlType = 'block';
 
-    BLOCK.prototype.__attribute = {
-      x: 0,
-      y: 0,
-      z: 1,
-      width: 0,
-      height: 0
+    init = function(self) {
+      self.__options = {
+        x: 0,
+        y: 0,
+        z: 1,
+        width: 0,
+        height: 0
+      };
+      return self.stage = null;
     };
 
     BLOCK.prototype.__style = function(div) {
       div.style.position = 'absolute';
-      div.style.left = "" + this.__attribute.x + "px";
-      div.style.top = "" + this.__attribute.y + "px";
-      div.style.width = "" + this.__attribute.width + "px";
-      div.style.height = "" + this.__attribute.height + "px";
-      return div.style.zIndex = this.__attribute.z;
+      div.style.left = "" + this.__options.x + "px";
+      div.style.top = "" + this.__options.y + "px";
+      div.style.width = "" + this.__options.width + "px";
+      div.style.height = "" + this.__options.height + "px";
+      return div.style.zIndex = this.__options.z;
     };
 
     BLOCK.prototype.build = function(options, callback) {
@@ -2047,7 +2054,7 @@
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         i = _ref4[_i];
         if (options[i]) {
-          this.__attribute[i] = options[i];
+          this.__options[i] = options[i];
         }
       }
       return this.__style(this.element);
@@ -2057,14 +2064,7 @@
       this.options = __bind(this.options, this);
       this.destroy = __bind(this.destroy, this);
       this.build = __bind(this.build, this);
-      this.__style = __bind(this.__style, this);      this.__attribute = {
-        x: 0,
-        y: 0,
-        z: 1,
-        width: 0,
-        height: 0
-      };
-      this.stage = null;
+      this.__style = __bind(this.__style, this);      init(this);
       if (stage && stage.type() === 'stage') {
         this.stage = stage;
       }
@@ -2079,21 +2079,24 @@
 
     IMG.prototype.__htmlType = 'img';
 
-    IMG.prototype.__attribute = {
-      x: 0,
-      y: 0,
-      z: 1,
-      width: 0,
-      height: 0
+    IMG.prototype.init = function(self) {
+      self.__options = {
+        x: 0,
+        y: 0,
+        z: 1,
+        width: 0,
+        height: 0
+      };
+      return self.stage = null;
     };
 
     IMG.prototype.__style = function(img) {
       img.style.position = 'absolute';
-      img.style.left = "" + this.__attribute.x + "px";
-      img.style.top = "" + this.__attribute.y + "px";
-      img.style.zIndex = this.__attribute.z;
-      img.width = this.__attribute.width;
-      return img.height = this.__attribute.height;
+      img.style.left = "" + this.__options.x + "px";
+      img.style.top = "" + this.__options.y + "px";
+      img.style.zIndex = this.__options.z;
+      img.width = this.__options.width;
+      return img.height = this.__options.height;
     };
 
     IMG.prototype.build = function(options, callback) {
@@ -2108,7 +2111,7 @@
       _ref4 = ['x', 'y', 'z', 'width', 'height'];
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         i = _ref4[_i];
-        this.__attribute[i] = options[i];
+        this.__options[i] = options[i];
       }
       this.__style(this.element);
       return this.element.src = options.src;
@@ -2126,7 +2129,7 @@
       for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
         i = _ref4[_i];
         if (options[i]) {
-          this.__attribute[i] = options[i];
+          this.__options[i] = options[i];
         }
       }
       return this.__style(this.element);
@@ -2136,7 +2139,7 @@
       this.set = __bind(this.set, this);
       this.destroy = __bind(this.destroy, this);
       this.build = __bind(this.build, this);
-      this.__style = __bind(this.__style, this);      this.stage = null;
+      this.__style = __bind(this.__style, this);      init(this);
       if (stage && stage.type() === 'stage') {
         this.stage = stage;
       }
@@ -2147,15 +2150,19 @@
   })(HTML);
 
   Input.Keyboard = (function(_super) {
+    var init;
+
     __extends(Keyboard, _super);
 
-    Keyboard.prototype.press = null;
+    init = function(self) {
+      return self.press = null;
+    };
 
     function Keyboard(dom) {
       var textarea,
         _this = this;
 
-      this.press = null;
+      init(this);
       textarea = document.createElement('textarea');
       textarea.style.position = 'fixed';
       textarea.style.left = '-500px';
@@ -2191,17 +2198,19 @@
   })(Input);
 
   Input.Mouse = (function(_super) {
+    var init;
+
     __extends(Mouse, _super);
 
-    Mouse.prototype.click = null;
-
-    Mouse.prototype.position = null;
+    init = function(self) {
+      self.click = null;
+      return self.position = null;
+    };
 
     function Mouse(dom) {
       var _this = this;
 
-      this.click = null;
-      this.position = null;
+      init(this);
       dom.addEventListener('mousedown', function(event) {
         return _this.click = {
           button: event.button,
@@ -2222,32 +2231,36 @@
   })(Input);
 
   Vector.Circle = (function(_super) {
+    var init;
+
     __extends(Circle, _super);
 
     Circle.prototype.__vectorType = 'circle';
 
-    Circle.prototype.options = {
-      origin: {
-        x: 0,
-        y: 0
-      },
-      radius: 0
+    init = function(self) {
+      return self.__options = {
+        origin: {
+          x: 0,
+          y: 0
+        },
+        radius: 0
+      };
     };
 
     Circle.prototype.isInside = function(x, y) {
-      return Math.pow(this.options.x - x, 2) + Math.pow(this.options.y - y, 2) <= options.radius * options.radius;
+      return Math.pow(this.__options.x - x, 2) + Math.pow(this.__options.y - y, 2) <= options.radius * options.radius;
     };
 
     Circle.prototype.move = function(dx, dy) {
-      this.options.origin.x += dx;
-      return this.options.origin.y += dy;
+      this.__options.origin.x += dx;
+      return this.__options.origin.y += dy;
     };
 
     function Circle(origin, radius) {
       this.move = __bind(this.move, this);
-      this.isInside = __bind(this.isInside, this);      this.options = {};
-      this.options.origin = origin;
-      this.options.radius = radius;
+      this.isInside = __bind(this.isInside, this);      init(this);
+      this.__options.origin = origin;
+      this.__options.radius = radius;
     }
 
     return Circle;
@@ -2255,19 +2268,23 @@
   })(Vector);
 
   Vector.Line = (function(_super) {
+    var init;
+
     __extends(Line, _super);
 
     Line.prototype.__vectorType = 'line';
 
-    Line.prototype.options = {
-      start: {
-        x: 0,
-        y: 0
-      },
-      end: {
-        x: 0,
-        y: 0
-      }
+    init = function(self) {
+      return self.__options = {
+        start: {
+          x: 0,
+          y: 0
+        },
+        end: {
+          x: 0,
+          y: 0
+        }
+      };
     };
 
     Line.prototype.isInside = function(x, y) {
@@ -2275,16 +2292,16 @@
     };
 
     Line.prototype.move = function(dx, dy) {
-      this.options.start.x += dx;
-      this.options.start.y += dy;
-      this.options.end.x += dx;
-      return this.options.end.y += dy;
+      this.__options.start.x += dx;
+      this.__options.start.y += dy;
+      this.__options.end.x += dx;
+      return this.__options.end.y += dy;
     };
 
     function Line(start, end) {
-      this.move = __bind(this.move, this);      this.options = {};
-      this.options.start = start;
-      this.options.end = end;
+      this.move = __bind(this.move, this);      init(this);
+      this.__options.start = start;
+      this.__options.end = end;
     }
 
     return Line;
@@ -2292,38 +2309,42 @@
   })(Vector);
 
   Vector.Rect = (function(_super) {
+    var init;
+
     __extends(Rect, _super);
 
     Rect.prototype.__vectorType = 'rect';
 
-    Rect.prototype.options = {
-      start: {
-        x: 0,
-        y: 0
-      },
-      width: 0,
-      height: 0
+    init = function(self) {
+      return self.__options = {
+        start: {
+          x: 0,
+          y: 0
+        },
+        width: 0,
+        height: 0
+      };
     };
 
     Rect.prototype.isInside = function(x, y) {
-      if (x < this.options.start.x || x > this.options.start.x + this.options.start.width || y < this.options.start.y || y > this.options.start.y + this.options.start.height) {
+      if (x < this.__options.start.x || x > this.__options.start.x + this.__options.start.width || y < this.__options.start.y || y > this.__options.start.y + this.__options.start.height) {
         false;
       }
       return true;
     };
 
     Rect.prototype.move = function(dx, dy) {
-      this.options.start.x += dx;
-      this.options.start.y += dy;
+      this.__options.start.x += dx;
+      this.__options.start.y += dy;
       return this;
     };
 
     function Rect(start, width, height) {
       this.move = __bind(this.move, this);
-      this.isInside = __bind(this.isInside, this);      this.options = {};
-      this.options.start = start;
-      this.options.width = width;
-      this.options.height = height;
+      this.isInside = __bind(this.isInside, this);      init(this);
+      this.__options.start = start;
+      this.__options.width = width;
+      this.__options.height = height;
     }
 
     return Rect;
@@ -2331,3 +2352,7 @@
   })(Vector);
 
 }).call(this);
+
+/*
+//@ sourceMappingURL=hikari.js.map
+*/

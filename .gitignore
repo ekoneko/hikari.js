@@ -4,3 +4,9 @@ node_modules/*
 hikari.full.js
 
 hikari.min.js
+
+hikari.js.map
+
+hikari.src.coffee
+
+hikari.js
