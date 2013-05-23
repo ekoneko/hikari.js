@@ -1,15 +1,22 @@
 class Draw.Bitmap extends Draw
 
 	__drawType: 'bitmap'
-	__isDisposed: on
-	__context: null
-	__options:
-		scaleX: 1
-		scaleY: 1
-		alpha: 1
-		rotate: 0
 
-	entity: null
+	init = (self)->
+		self.__isDisposed = on
+		self.__context = null
+		self.__options =
+			sourceX: 0
+			sourceY: 0
+			sourceWidth: 0
+			sourceHeight: 0
+			transX: 0
+			transY: 0
+			scaleX: 1
+			scaleY: 1
+			alpha: 1
+			rotate: 0
+		self.entity = null
 
 	load: (src, callback)=>
 		@entity = new Image()
@@ -49,20 +56,8 @@ class Draw.Bitmap extends Draw
 		super()
 
 	constructor: (width, height)->
-		@__options =
-			sourceX: 0
-			sourceY: 0
-			sourceWidth: 0
-			sourceHeight: 0
-			transX: 0
-			transY: 0
-			scaleX: 1
-			scaleY: 1
-			alpha: 1
-			rotate: 0
-		@__stage = null
-		@entity = null
-		@__context = null
+		init this
+
 		@width width
 		@height height
 		nextUpdate = @frequency

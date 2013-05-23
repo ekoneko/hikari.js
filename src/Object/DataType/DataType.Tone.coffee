@@ -2,16 +2,16 @@ class DataType.Tone extends DataType
 
 	__dataType: 'tone'
 	
-	__options:
-		r: 0
-		g: 0
-		b: 0
-		alpha: 1
-		gray: off
-		opposite: off
-		transparent: null	# Color
-
-	noChange: on
+	init =(self)->
+		self.__options =
+			r: 0
+			g: 0
+			b: 0
+			alpha: 1
+			gray: off
+			opposite: off
+			transparent: null	# Color
+		self.noChange = on
 
 	scope = (value, min, max)=>
 		Math.max min, Math.min(value, max)
@@ -100,8 +100,8 @@ class DataType.Tone extends DataType
 		new DataType.Tone @__options
 
 	constructor: (options)->
-		@__options = {}
-		@reset()
+		init this
+
 		options = options or {}
 		@red options.r
 		@green options.g

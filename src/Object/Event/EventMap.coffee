@@ -1,10 +1,11 @@
 class EventMap extends Object
 
-	width: 0
-	height: 0
-	keyEvent: {}
-	grid: 50
-	mouseEvent: []
+	init = (self)->
+		self.width = 0
+		self.height = 0
+		self.grid = 50
+		self.keyEvent = {}
+		self.mouseEvent = []
 
 	sortEvent = (array)->
 		array = array.sort (a, b)->
@@ -139,10 +140,7 @@ class EventMap extends Object
 		@register event
 
 	constructor: (width, height, grid)->
-		@width = width
-		@height = height
-		@keyEvent = {}
-		@mouseEvent = []
+		init this
 
 		@grid = grid if grid
 		lineCount = Math.ceil width / @grid

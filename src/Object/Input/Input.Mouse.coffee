@@ -1,11 +1,12 @@
 class Input.Mouse extends Input
 
-	click: null
-	position: null
+	init = (self)->
+		self.click = null
+		self.position = null
 
 	constructor: (dom)->
-		@click = null
-		@position = null
+		init this
+
 		dom.addEventListener 'mousedown', (event)=>
 			@click =
 				button: event.button	# 0-left| 1-right

@@ -3,15 +3,17 @@ class Draw.Vector extends Draw
 	# TIPS: about strokeStyle:
 	# 	http://www.w3schools.com/tags/canvas_strokestyle.asp
 	__drawType: 'vector'
-	__isDisposed: on
-	__options:
-		lineWidth: 1
-		strokeStyle: 'black' # color|gradient|pattern
-		lineCap: 'butt'
-		fillStyle: 'black'
-		alpha: 1
 
-	vector: []
+	init = (self)->
+		self.__isDisposed = on
+		self.__options =
+			lineWidth: 1
+			strokeStyle: 'black' # color|gradient|pattern
+			lineCap: 'butt'
+			fillStyle: 'black'
+			alpha: 1
+
+		self.vector = []
 
 	__updateLine: (vector)=>
 		@__context.moveTo vector.options.start.x + @__x, vector.options.start.y + @__y
@@ -56,14 +58,7 @@ class Draw.Vector extends Draw
 		this
 
 	constructor: (x, y)->
-		@vector = []
-		@__stage = null
-		@__options = 
-			lineWidth: 1
-			strokeStyle: 'black' # color|gradient|pattern
-			lineCap: 'butt'
-			fillStyle: 'black'
-			alpha: 1
-
+		init this
+		
 		@x x
 		@y y

@@ -1,9 +1,11 @@
 class Input.Keyboard extends Input
 
-	press: null
+	init = (self)->
+		self.press = null
 
 	constructor:(dom)->
-		@press = null
+		init this
+
 		textarea = document.createElement 'textarea'
 		textarea.style.position = 'fixed'
 		textarea.style.left = '-500px'

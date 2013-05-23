@@ -4,22 +4,24 @@ class Event extends Object
 	@list: {}
 
 	__type: 'event'
-	__id: 0
-	__action: null
 
-	eventType: ''	# keyPress|hover|click
-	###
-	# @condition
-	# 	keyPress:
-	#		(int)identity
-	#
-	# 	hover || click
-	#		scope(Rect|Circle)
-	#		button(1|2|3)
-	###
-	condition: null
-	map: null
-	priority: 0
+	init = (self)->
+		self.__id = Event.id++
+		self.__action = null
+
+		###
+		# condition
+		# 	keyPress:
+		#		(int)identity
+		#
+		# 	hover || click
+		#		scope(Rect|Circle)
+		#		button(1|2|3)
+		###
+		self.condition = null
+		self.eventType = ''	# keyPress|hover|click
+		self.map = null
+		self.priority = 0
 
 	move: (dx, dy)=>
 		return off unless @condition.scope
@@ -35,12 +37,10 @@ class Event extends Object
 		super()
 
 	constructor: (eventType, condition, action)->
-		@map = @condition = @__action = null
+		init this
 
 		@__action = action
 		@eventType = eventType
 		condition.button = 1 if eventType is 'click' and !condition.button
 		@condition = condition
-
-		@__id = Event.id++
 		Event.list[@__id] = this

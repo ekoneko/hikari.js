@@ -2,10 +2,11 @@ class DataType.Color extends DataType
 
 	__dataType: 'color'
 
-	__options:
-		r: 0
-		g: 0
-		b: 0
+	init = (self)->
+		self.__options =
+			r: 0
+			g: 0
+			b: 0
 
 	hex2dec = (hex)=>
 		r = parseInt hex.substr(1, 2), 16
@@ -68,10 +69,7 @@ class DataType.Color extends DataType
 		new DataType.Color @__options
 
 	constructor: (r, g, b) ->
-		@__options =
-			r: 0
-			g: 0
-			b: 0
+		init this
 
 		if r[0] is '#'
 			@set r
