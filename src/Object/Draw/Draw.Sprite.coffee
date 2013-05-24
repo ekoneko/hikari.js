@@ -97,6 +97,16 @@ class Draw.Sprite extends Draw
 		else
 			ret = off
 
+	offset: (dx, dy)=>
+		dx = @__options.bw * dx if dx < 1
+		dy = @__options.bh * dy if dy < 1
+		@__options.bx += dx % @__options.bw
+		@__options.bx -= @__options.bw if @__options.bx > @__options.bw
+		@__options.bx += @__options.bw if @__options.bx < 0
+		@__options.by += dy % @__options.bh
+		@__options.by -= @__options.bh if @__options.by > @__options.bh
+		@__options.by += @__options.bh if @__options.by < 0
+
 	clone: ()=>
 		dest = new Draw.Sprite()
 		dest = super dest, this
