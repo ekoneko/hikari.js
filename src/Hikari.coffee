@@ -16,6 +16,7 @@ class @Hikari
 		@Event		= Event
 		@Const		= Const
 		@NetWork	= Network
+		@Animate	= Animate
 
 	__init: =>
 		global()
@@ -32,11 +33,11 @@ class @Hikari
 		# TODO
 
 	__update: ()=>
+		Animate.update()
 		@stage.update()
 		@input.update()
 		@update() if typeof @update is 'function'
 		@__delay @__update
-			
 
 	constructor: (container, width, height, callback)->
 		@__delay = @update = null

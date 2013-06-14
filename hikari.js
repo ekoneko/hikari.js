@@ -24,7 +24,8 @@
       Hikari.Vector = Vector;
       Hikari.Event = Event;
       Hikari.Const = Const;
-      return Hikari.NetWork = Network;
+      Hikari.NetWork = Network;
+      return Hikari.Animate = Animate;
     };
 
     Hikari.prototype.__init = function() {
@@ -44,6 +45,7 @@
     Hikari.prototype.__loadResources = function() {};
 
     Hikari.prototype.__update = function() {
+      Animate.update();
       this.stage.update();
       this.input.update();
       if (typeof this.update === 'function') {
@@ -111,18 +113,48 @@
   Animate = (function(_super) {
     __extends(Animate, _super);
 
-    /*
-    		entity: sprite
-    */
+    Animate.id = 1;
 
+    Animate.list = {};
 
-    function Animate(sprite) {
-      this.entity = sprite;
+    Animate.update = function() {
+      var item, _i, _len, _ref, _results;
+
+      _ref = Animate.list;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        _results.push(item.update());
+      }
+      return _results;
+    };
+
+    Animate.prototype.__type = 'animate';
+
+    Animate.prototype.__animateType = '';
+
+    Animate.prototype.animateType = function() {
+      return __animateType;
+    };
+
+    Animate.prototype.start = function() {};
+
+    Animate.prototype.update = function() {};
+
+    Animate.prototype.destory = function() {
+      delete Animate.list[this.__id];
+      return Animate.__super__.destory.call(this);
+    };
+
+    function Animate() {
+      this.update = __bind(this.update, this);
+      this.start = __bind(this.start, this);      this.__id = Animate.id++;
+      Animate.list[this.__id];
     }
 
     return Animate;
 
-  })(Object);
+  }).call(this, Object);
 
   Audio = (function() {
     function Audio() {}
@@ -349,6 +381,7 @@
       if (this.map) {
         this.map.revoke(this);
       }
+      delete Event.list[this.__id];
       return Event.__super__.destory.call(this);
     };
 
@@ -923,6 +956,210 @@
     return Vector;
 
   })(Object);
+
+  Animate.Blink = (function(_super) {
+    var init;
+
+    __extends(Blink, _super);
+
+    Blink.prototype.__animateType = 'blink';
+
+    init = function(self) {
+      self.__timer = 0;
+      self.__frame = 0;
+      self.__count = 0;
+      self.__start = false;
+      self.__next = 0;
+      self.__orginTone = null;
+      self.__newTone = null;
+      self.entity = null;
+      self.color = null;
+      self.path = null;
+      self.delta = 1;
+      return self.onFinish = null;
+    };
+
+    Blink.prototype.start = function(timer) {
+      if (this.__start) {
+        return false;
+      }
+      this.__timer = timer;
+      this.__start = true;
+      if (this.entity.tone()) {
+        this.__orginTone = this.entity.tone();
+        this.__newTone = orginTone.clone();
+      } else {
+        this.__orginTone = null;
+        this.__newTone = new DataType.Tone();
+      }
+      this.__count = this.__timer / this.delta;
+      return true;
+    };
+
+    Blink.prototype.update = function() {
+      var b, g, r;
+
+      if (!this.__start) {
+        return false;
+      }
+      if (--this.__next > 0) {
+        return true;
+      }
+      this.__next = this.delta;
+      r = this.color.r / this.__count * this.__frame;
+      g = this.color.g / this.__count * this.__frame;
+      b = this.color.b / this.__count * this.__frame;
+      this.__newTone.red(this.__newTone.red() + r);
+      this.__newTone.green(this.__newTone.green() + g);
+      this.__newTone.blue(this.__newTone.blue() + b);
+      this.entity.tone(this.__newTone);
+      this.__frame += this.delta;
+      this.__timer -= this.delta;
+      if (this.__timer < 1) {
+        this.__timer = 0;
+        this.__start = false;
+        this.entity.tone(this.__orginTone);
+        this.__newTone.destory();
+        if (this.onFinish === 'function') {
+          return this.onFinish();
+        }
+      }
+    };
+
+    function Blink(sprite, color, path) {
+      this.update = __bind(this.update, this);
+      this.start = __bind(this.start, this);      Blink.__super__.constructor.call(this);
+      init(this);
+      this.entity = sprite;
+      this.path = path;
+      this.color = color;
+    }
+
+    return Blink;
+
+  })(Animate);
+
+  Animate.Marquee = (function(_super) {
+    var init;
+
+    __extends(Marquee, _super);
+
+    Marquee.prototype.__animateType = 'marquee';
+
+    init = function(self) {
+      self.__timer = 0;
+      self.__start = false;
+      self.__next = 0;
+      self.entity = null;
+      self.dx = 0;
+      self.dy = 0;
+      self.delta = 1;
+      return self.onFinish = null;
+    };
+
+    Marquee.prototype.start = function(timer) {
+      if (this.__start) {
+        return false;
+      }
+      this.__timer = timer;
+      this.__start = true;
+      return true;
+    };
+
+    Marquee.prototype.update = function() {
+      if (!this.__start) {
+        return false;
+      }
+      if (--this.__next > 0) {
+        return true;
+      }
+      this.__next = this.delta;
+      this.entity.offset(dx, dy);
+      this.__timer -= this.delta;
+      if (this.__timer < 1) {
+        this.__timer = 0;
+        this.__start = false;
+        if (this.onFinish === 'function') {
+          return this.onFinish();
+        }
+      }
+    };
+
+    function Marquee(sprite, dx, dy) {
+      this.update = __bind(this.update, this);
+      this.start = __bind(this.start, this);      Marquee.__super__.constructor.call(this);
+      init(this);
+      this.entity = sprite;
+      this.dx = dx;
+      this.dy = dy;
+    }
+
+    return Marquee;
+
+  })(Animate);
+
+  Animate.Move = (function(_super) {
+    var init;
+
+    __extends(Move, _super);
+
+    Move.prototype.__animateType = 'move';
+
+    init = function(self) {
+      self.__timer = 0;
+      self.__frame = 0;
+      self.__start = false;
+      self.__next = 0;
+      self.entity = null;
+      self.path = null;
+      self.delta = 1;
+      return self.onFinish = null;
+    };
+
+    Move.prototype.start = function(timer) {
+      if (this.__start) {
+        return false;
+      }
+      this.__timer = timer;
+      this.__start = true;
+      return true;
+    };
+
+    Move.prototype.update = function() {
+      var point;
+
+      if (!this.__start) {
+        return false;
+      }
+      if (--this.__next > 0) {
+        return true;
+      }
+      this.__next = this.delta;
+      point = this.path(this.__frame);
+      this.entity.x(point.x);
+      this.entity.y(point.y);
+      this.__frame += this.delta;
+      this.__timer -= this.delta;
+      if (this.__timer < 1) {
+        this.__timer = this.__frame = 0;
+        this.__start = false;
+        if (this.onFinish === 'function') {
+          return this.onFinish();
+        }
+      }
+    };
+
+    function Move(sprite, path) {
+      this.update = __bind(this.update, this);
+      this.start = __bind(this.start, this);      Move.__super__.constructor.call(this);
+      init(this);
+      this.entity = sprite;
+      this.path = path;
+    }
+
+    return Move;
+
+  })(Animate);
 
   Const.KeyCode = {
     '0': 48,
@@ -1876,6 +2113,29 @@
       }
     };
 
+    Sprite.prototype.offset = function(dx, dy) {
+      if (dx < 1) {
+        dx = this.__options.bw * dx;
+      }
+      if (dy < 1) {
+        dy = this.__options.bh * dy;
+      }
+      this.__options.bx += dx % this.__options.bw;
+      if (this.__options.bx > this.__options.bw) {
+        this.__options.bx -= this.__options.bw;
+      }
+      if (this.__options.bx < 0) {
+        this.__options.bx += this.__options.bw;
+      }
+      this.__options.by += dy % this.__options.bh;
+      if (this.__options.by > this.__options.bh) {
+        this.__options.by -= this.__options.bh;
+      }
+      if (this.__options.by < 0) {
+        return this.__options.by += this.__options.bh;
+      }
+    };
+
     Sprite.prototype.clone = function() {
       var dest;
 
@@ -1887,6 +2147,7 @@
 
     function Sprite(width, height, x, y) {
       this.clone = __bind(this.clone, this);
+      this.offset = __bind(this.offset, this);
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
       this.bitmap = __bind(this.bitmap, this);

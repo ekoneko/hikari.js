@@ -34,6 +34,7 @@ class Event extends Object
 
 	destory: ()=>
 		@map.revoke this if @map
+		delete Event.list[@__id]
 		super()
 
 	constructor: (eventType, condition, action)->
