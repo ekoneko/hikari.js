@@ -4,19 +4,15 @@ class Draw.Sprite extends Draw
 	
 	__drawType: 'sprite'
 
-	__tone: null	# Tone
-	__bitmap: null
-	__canvas: null
-	__context: null
-	__imageData: null
-	__isDisposed: off
-	__imageChanged: off
-	__toneChanged: off
-	__options:
-		bx: 0	# bitmap x
-		by: 0	# bitmap y
-		bw: 0	# bitmap width
-		bh: 0	# bitmap height
+	init = (self)->
+		self.__tone = self.__stage = self.__bitmap =
+		self.__canvas = self.__context = self.__imageData = null
+		self.__isDisposed = self.__imageChanged = self.__toneChanged = off
+		self.__options =
+			bx: 0
+			by: 0
+			bw: 0
+			bh: 0
 
 	__updateCanvas: ()=>
 		cache = @__canvas.getContext '2d'
@@ -114,13 +110,7 @@ class Draw.Sprite extends Draw
 		dest
 
 	constructor: (width, height, x, y)->
-		@__tone = @__stage = @__bitmap = @__canvas = @__context = @__imageData = null
-		@__isDisposed = @__imageChanged = @__toneChanged = off
-		@__options =
-			bx: 0
-			by: 0
-			bw: 0
-			bh: 0
+		init this
 
 		@width width
 		@height height
