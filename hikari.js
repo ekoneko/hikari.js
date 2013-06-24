@@ -312,7 +312,7 @@
     };
 
     Draw.prototype.dispose = function(value) {
-      if (value) {
+      if (typeof value !== 'undefined') {
         this.__isDisposed = value;
         if (this.__stage) {
           this.__stage.needUpdate = true;
@@ -426,15 +426,15 @@
 
       ret = [];
       if (scope.vectorType() === 'rect') {
-        x = scope.options.start.x;
-        y = scope.options.start.y;
-        width = scope.options.width;
-        height = scope.options.height;
+        x = scope.__options.start.x;
+        y = scope.__options.start.y;
+        width = scope.__options.width;
+        height = scope.__options.height;
       } else if (scope.vectorType() === 'circle') {
-        x = scope.options.origin.x - scope.options.radius;
-        y = scope.options.origin.y - scope.options.radius;
-        width = x + scope.options.radius * 2;
-        height = y + scope.options.radius * 2;
+        x = scope.__options.origin.x - scope.__options.radius;
+        y = scope.__options.origin.y - scope.__options.radius;
+        width = x + scope.__options.radius * 2;
+        height = y + scope.__options.radius * 2;
       } else {
         return ret;
       }
@@ -1214,6 +1214,8 @@
     'TOP': 38,
     'RIGHT': 39,
     'DOWN': 40,
+    'ENTER': 13,
+    'SPACE': 32,
     'Alt+0': 304,
     'Alt+1': 305,
     'Alt+2': 306,
@@ -1266,6 +1268,8 @@
     'Alt+TOP': 294,
     'Alt+RIGHT': 295,
     'Alt+DOWN': 296,
+    'Alt+ENTER': 269,
+    'Alt+SPACE': 288,
     'Ctrl+0': 560,
     'Ctrl+1': 561,
     'Ctrl+2': 562,
@@ -1318,6 +1322,8 @@
     'Ctrl+TOP': 550,
     'Ctrl+RIGHT': 551,
     'Ctrl+DOWN': 552,
+    'Ctrl+ENTER': 525,
+    'Ctrl+SPACE': 544,
     'Shift+0': 1072,
     'Shift+1': 1073,
     'Shift+2': 1074,
@@ -1370,6 +1376,8 @@
     'Shift+TOP': 1062,
     'Shift+RIGHT': 1063,
     'Shift+DOWN': 1064,
+    'Shift+ENTER': 1037,
+    'Shift+SPACE': 1056,
     'Alt+Ctrl+0': 816,
     'Alt+Ctrl+1': 817,
     'Alt+Ctrl+2': 818,
@@ -1422,6 +1430,8 @@
     'Alt+Ctrl+TOP': 806,
     'Alt+Ctrl+RIGHT': 807,
     'Alt+Ctrl+DOWN': 808,
+    'Alt+Ctrl+ENTER': 781,
+    'Alt+Ctrl+ENTER': 800,
     'Alt+Shift+0': 1328,
     'Alt+Shift+1': 1329,
     'Alt+Shift+2': 1330,
@@ -1474,6 +1484,8 @@
     'Alt+Shift+TOP': 1318,
     'Alt+Shift+RIGHT': 1319,
     'Alt+Shift+DOWN': 1320,
+    'Alt+Shift+ENTER': 1293,
+    'Alt+Shift+ENTER': 1312,
     'Ctrl+Shift+0': 1584,
     'Ctrl+Shift+1': 1585,
     'Ctrl+Shift+2': 1586,
@@ -1526,6 +1538,8 @@
     'Ctrl+Shift+TOP': 1574,
     'Ctrl+Shift+RIGHT': 1575,
     'Ctrl+Shift+DOWN': 1576,
+    'Ctrl+Shift+ENTER': 1549,
+    'Ctrl+Shift+SPACE': 1568,
     'Alt+Ctrl+Shift+0': 1840,
     'Alt+Ctrl+Shift+1': 1841,
     'Alt+Ctrl+Shift+2': 1842,
@@ -1577,7 +1591,9 @@
     'Alt+Ctrl+Shift+LEFT': 1829,
     'Alt+Ctrl+Shift+TOP': 1830,
     'Alt+Ctrl+Shift+RIGHT': 1831,
-    'Alt+Ctrl+Shift+DOWN': 1832
+    'Alt+Ctrl+Shift+DOWN': 1832,
+    'Alt+Ctrl+Shift+ENTER': 1805,
+    'Alt+Ctrl+Shift+SPACE': 1824
   };
 
   DataType.Color = (function(_super) {
@@ -1891,8 +1907,12 @@
 
       this.entity = new Image();
       this.entity.onload = function() {
-        _this.__width = _this.entity.width;
-        _this.__height = _this.entity.height;
+        if (!_this.__width) {
+          _this.__width = _this.entity.width;
+        }
+        if (!_this.__height) {
+          _this.__height = _this.entity.height;
+        }
         if (typeof callback === 'function') {
           return callback(_this);
         }
@@ -1926,22 +1946,22 @@
       if (!(this.__isDisposed && this.__context)) {
         return false;
       }
-      if (x == null) {
+      if (!x) {
         x = 0;
       }
-      if (y == null) {
+      if (!y) {
         y = 0;
       }
-      if (width == null) {
+      if (!width) {
         width = this.__width;
       }
-      if (height == null) {
+      if (!height) {
         height = this.__height;
       }
       this.__context.globalAlpha = this.__options.alpha;
       this.__context.scale(this.__options.scaleX, this.__options.scaleY);
       this.__context.rotate(this.__options.rotate);
-      return this.__context.drawImage(this.entity, x, y, width, height, this.__x, this.__y, this.__width, this.__height);
+      return this.__context.drawImage(this.entity, this.__x, this.__y, this.__width, this.__height, x, y, width, height);
     };
 
     Bitmap.prototype.destroy = function() {
@@ -1968,7 +1988,7 @@
   })(Draw);
 
   Draw.Sprite = (function(_super) {
-    var zAutoIncrement;
+    var init, zAutoIncrement;
 
     __extends(Sprite, _super);
 
@@ -1976,27 +1996,15 @@
 
     Sprite.prototype.__drawType = 'sprite';
 
-    Sprite.prototype.__tone = null;
-
-    Sprite.prototype.__bitmap = null;
-
-    Sprite.prototype.__canvas = null;
-
-    Sprite.prototype.__context = null;
-
-    Sprite.prototype.__imageData = null;
-
-    Sprite.prototype.__isDisposed = false;
-
-    Sprite.prototype.__imageChanged = false;
-
-    Sprite.prototype.__toneChanged = false;
-
-    Sprite.prototype.__options = {
-      bx: 0,
-      by: 0,
-      bw: 0,
-      bh: 0
+    init = function(self) {
+      self.__tone = self.__stage = self.__bitmap = self.__canvas = self.__context = self.__imageData = null;
+      self.__isDisposed = self.__imageChanged = self.__toneChanged = false;
+      return self.__options = {
+        bx: 0,
+        by: 0,
+        bw: 0,
+        bh: 0
+      };
     };
 
     Sprite.prototype.__updateCanvas = function() {
@@ -2007,7 +2015,7 @@
       cache.save();
       cache.clearRect(0, 0, this.__width, this.__height);
       if (this.__bitmap && this.__bitmap.dispose()) {
-        this.__bitmap.update(cache);
+        this.__bitmap.update(cache, this.__options.bx, this.__options.by, this.__options.bw, this.__options.bh);
       }
       this.__imageChanged = false;
       return cache;
@@ -2153,14 +2161,7 @@
       this.bitmap = __bind(this.bitmap, this);
       this.tone = __bind(this.tone, this);
       this.__updateImageData = __bind(this.__updateImageData, this);
-      this.__updateCanvas = __bind(this.__updateCanvas, this);      this.__tone = this.__stage = this.__bitmap = this.__canvas = this.__context = this.__imageData = null;
-      this.__isDisposed = this.__imageChanged = this.__toneChanged = false;
-      this.__options = {
-        bx: 0,
-        by: 0,
-        bw: 0,
-        bh: 0
-      };
+      this.__updateCanvas = __bind(this.__updateCanvas, this);      init(this);
       this.width(width);
       this.height(height);
       this.x(x);
@@ -2192,12 +2193,12 @@
     };
 
     Vector.prototype.__updateLine = function(vector) {
-      this.__context.moveTo(vector.options.start.x + this.__x, vector.options.start.y + this.__y);
-      return this.__context.lineTo(vector.options.end.x + this.__x, vector.options.end.y + this.__y);
+      this.__context.moveTo(vector.__options.start.x + this.__x, vector.__options.start.y + this.__y);
+      return this.__context.lineTo(vector.__options.end.x + this.__x, vector.__options.end.y + this.__y);
     };
 
     Vector.prototype.__updateRect = function(vector) {
-      return this.__context.rect(vector.options.start.x + this.__x, vector.options.start.y + this.__y, vector.options.width, vector.options.height);
+      return this.__context.rect(vector.__options.start.x + this.__x, vector.__options.start.y + this.__y, vector.__options.width, vector.__options.height);
     };
 
     Vector.prototype.draw = function(stage) {

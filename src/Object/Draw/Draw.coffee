@@ -61,7 +61,7 @@ class Draw extends Object
 		dest
 
 	dispose: (value)=>
-		if value
+		if typeof value isnt 'undefined'
 			@__isDisposed = value
 			@__stage.needUpdate = on if @__stage
 		@__isDisposed

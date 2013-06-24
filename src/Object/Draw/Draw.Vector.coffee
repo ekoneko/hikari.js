@@ -16,12 +16,12 @@ class Draw.Vector extends Draw
 		self.vector = []
 
 	__updateLine: (vector)=>
-		@__context.moveTo vector.options.start.x + @__x, vector.options.start.y + @__y
-		@__context.lineTo vector.options.end.x + @__x, vector.options.end.y + @__y
+		@__context.moveTo vector.__options.start.x + @__x, vector.__options.start.y + @__y
+		@__context.lineTo vector.__options.end.x + @__x, vector.__options.end.y + @__y
 
 	__updateRect: (vector)=>
-		@__context.rect vector.options.start.x + @__x, vector.options.start.y + @__y,
-		vector.options.width, vector.options.height
+		@__context.rect vector.__options.start.x + @__x, vector.__options.start.y + @__y,
+		vector.__options.width, vector.__options.height
 
 	draw: (stage)=>
 		@__stage = stage

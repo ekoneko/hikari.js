@@ -20,7 +20,7 @@ class Draw.Sprite extends Draw
 		cache.save()
 		cache.clearRect 0, 0, @__width, @__height
 		if @__bitmap and @__bitmap.dispose()
-			@__bitmap.update cache
+			@__bitmap.update cache, @__options.bx, @__options.by, @__options.bw, @__options.bh
 		@__imageChanged = off
 		cache
 

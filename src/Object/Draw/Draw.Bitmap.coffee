@@ -21,8 +21,8 @@ class Draw.Bitmap extends Draw
 	load: (src, callback)=>
 		@entity = new Image()
 		@entity.onload = ()=>
-			@__width = @entity.width
-			@__height = @entity.height
+			@__width = @entity.width unless @__width
+			@__height = @entity.height unless @__height
 			callback this if typeof callback is 'function'
 		@entity.src = src
 
@@ -40,16 +40,16 @@ class Draw.Bitmap extends Draw
 	update: (_context, x, y, width, height)=>
 		@__context = _context if _context
 		return off unless @__isDisposed and @__context
-		x ?= 0
-		y ?= 0
-		width ?= @__width
-		height ?= @__height
+		x = 0 unless x
+		y = 0 unless y
+		width = @__width unless width
+		height = @__height unless height
 		@__context.globalAlpha = @__options.alpha
 		@__context.scale @__options.scaleX, @__options.scaleY
 		@__context.rotate @__options.rotate
 		@__context.drawImage @entity,
-			x, y, width, height,
-			@__x, @__y, @__width, @__height
+			@__x, @__y, @__width, @__height,
+			x, y, width, height
 
 	destroy: ()=>
 		delete @entity

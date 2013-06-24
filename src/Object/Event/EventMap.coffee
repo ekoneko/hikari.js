@@ -15,15 +15,15 @@ class EventMap extends Object
 	__detectScope: (scope)=>
 		ret = []
 		if scope.vectorType() is 'rect'
-			x = scope.options.start.x
-			y = scope.options.start.y
-			width = scope.options.width
-			height = scope.options.height
+			x = scope.__options.start.x
+			y = scope.__options.start.y
+			width = scope.__options.width
+			height = scope.__options.height
 		else if scope.vectorType() is 'circle'
-			x = scope.options.origin.x - scope.options.radius
-			y = scope.options.origin.y - scope.options.radius
-			width = x + scope.options.radius * 2
-			height = y + scope.options.radius * 2
+			x = scope.__options.origin.x - scope.__options.radius
+			y = scope.__options.origin.y - scope.__options.radius
+			width = x + scope.__options.radius * 2
+			height = y + scope.__options.radius * 2
 		else
 			return ret
 		x0 = parseInt x / @grid, 10

@@ -51,6 +51,8 @@ Const.KeyCode =
 	'TOP': 38
 	'RIGHT': 39
 	'DOWN': 40
+	'ENTER': 13
+	'SPACE': 32
 	'Alt+0': 304
 	'Alt+1': 305
 	'Alt+2': 306
@@ -103,6 +105,8 @@ Const.KeyCode =
 	'Alt+TOP': 294
 	'Alt+RIGHT': 295
 	'Alt+DOWN': 296
+	'Alt+ENTER': 269
+	'Alt+SPACE': 288
 	'Ctrl+0': 560
 	'Ctrl+1': 561
 	'Ctrl+2': 562
@@ -155,6 +159,8 @@ Const.KeyCode =
 	'Ctrl+TOP': 550
 	'Ctrl+RIGHT': 551
 	'Ctrl+DOWN': 552
+	'Ctrl+ENTER': 525
+	'Ctrl+SPACE': 544
 	'Shift+0': 1072
 	'Shift+1': 1073
 	'Shift+2': 1074
@@ -207,6 +213,8 @@ Const.KeyCode =
 	'Shift+TOP': 1062
 	'Shift+RIGHT': 1063
 	'Shift+DOWN': 1064
+	'Shift+ENTER': 1037
+	'Shift+SPACE': 1056
 	'Alt+Ctrl+0': 816
 	'Alt+Ctrl+1': 817
 	'Alt+Ctrl+2': 818
@@ -259,6 +267,8 @@ Const.KeyCode =
 	'Alt+Ctrl+TOP': 806
 	'Alt+Ctrl+RIGHT': 807
 	'Alt+Ctrl+DOWN': 808
+	'Alt+Ctrl+ENTER': 781
+	'Alt+Ctrl+ENTER': 800
 	'Alt+Shift+0': 1328
 	'Alt+Shift+1': 1329
 	'Alt+Shift+2': 1330
@@ -311,6 +321,8 @@ Const.KeyCode =
 	'Alt+Shift+TOP': 1318
 	'Alt+Shift+RIGHT': 1319
 	'Alt+Shift+DOWN': 1320
+	'Alt+Shift+ENTER': 1293
+	'Alt+Shift+ENTER': 1312
 	'Ctrl+Shift+0': 1584
 	'Ctrl+Shift+1': 1585
 	'Ctrl+Shift+2': 1586
@@ -363,6 +375,8 @@ Const.KeyCode =
 	'Ctrl+Shift+TOP': 1574
 	'Ctrl+Shift+RIGHT': 1575
 	'Ctrl+Shift+DOWN': 1576
+	'Ctrl+Shift+ENTER': 1549
+	'Ctrl+Shift+SPACE': 1568
 	'Alt+Ctrl+Shift+0': 1840
 	'Alt+Ctrl+Shift+1': 1841
 	'Alt+Ctrl+Shift+2': 1842
@@ -415,3 +429,5 @@ Const.KeyCode =
 	'Alt+Ctrl+Shift+TOP': 1830
 	'Alt+Ctrl+Shift+RIGHT': 1831
 	'Alt+Ctrl+Shift+DOWN': 1832
+	'Alt+Ctrl+Shift+ENTER': 1805
+	'Alt+Ctrl+Shift+SPACE': 1824
