@@ -7,7 +7,6 @@ module.exports = (grunt)->
 					sourceMap: on
 				files:
 					"hikari.js" : ['src/*.coffee', 'src/Object/Object.coffee', 'src/**/*.coffee', '!src/**/*.*.coffee', 'src/**/*.*.coffee']
-					"test/test.js" : "test/*.coffee"
 		uglify:
 			package:
 				files:

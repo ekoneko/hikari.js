@@ -1,5 +1,5 @@
 (function() {
-  var Animate, Audio, Const, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
+  var Animate, Audio, Const, Core, DataType, Draw, Event, EventMap, HTML, Input, Network, Object, Stage, Store, Vector, _ref, _ref1, _ref2, _ref3,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -48,9 +48,7 @@
       Animate.update();
       this.stage.update();
       this.input.update();
-      if (typeof this.update === 'function') {
-        this.update();
-      }
+      this.update.update();
       return this.__delay(this.__update);
     };
 
@@ -64,6 +62,7 @@
       this.stage = new Stage(width, height, container);
       this.eventMap = new EventMap(width, height);
       this.input = new Input(this.stage, this.eventMap);
+      this.update = new Update();
       this.__loadResources();
       this.__update();
       if (typeof callback === 'function') {
@@ -164,6 +163,15 @@
   })();
 
   Const = {};
+
+  Core = (function() {
+    function Core() {}
+
+    Core.prototype.__type = 'datatype';
+
+    return Core;
+
+  })();
 
   DataType = (function(_super) {
     __extends(DataType, _super);
@@ -1595,6 +1603,47 @@
     'Alt+Ctrl+Shift+ENTER': 1805,
     'Alt+Ctrl+Shift+SPACE': 1824
   };
+
+  Core.Update = (function(_super) {
+    __extends(Update, _super);
+
+    Update.prototype.functions = null;
+
+    Update.prototype.bind = function(name, func) {
+      if (typeof func === 'function') {
+        return functions[name] = func;
+      }
+    };
+
+    Update.prototype.unbind = function() {
+      return delete functions[name];
+    };
+
+    Update.prototype.update = function() {
+      var func, _i, _len, _ref4, _results;
+
+      _ref4 = this.functions;
+      _results = [];
+      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
+        func = _ref4[_i];
+        if (typeof func === 'function') {
+          _results.push(func());
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    function Update() {
+      this.update = __bind(this.update, this);
+      this.unbind = __bind(this.unbind, this);
+      this.bind = __bind(this.bind, this);      this.functions = {};
+    }
+
+    return Update;
+
+  })(Core);
 
   DataType.Color = (function(_super) {
     var dec2hex, hex2dec, init, scope,
