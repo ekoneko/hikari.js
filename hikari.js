@@ -62,7 +62,7 @@
       this.stage = new Stage(width, height, container);
       this.eventMap = new EventMap(width, height);
       this.input = new Input(this.stage, this.eventMap);
-      this.update = new Update();
+      this.update = new Core.Update();
       this.__loadResources();
       this.__update();
       if (typeof callback === 'function') {

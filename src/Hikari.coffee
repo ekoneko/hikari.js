@@ -36,7 +36,7 @@ class @Hikari
 		Animate.update()
 		@stage.update()
 		@input.update()
-		@update() if typeof @update is 'function'
+		@update.update()
 		@__delay @__update
 
 	constructor: (container, width, height, callback)->
@@ -51,6 +51,7 @@ class @Hikari
 
 		@eventMap = new EventMap width, height
 		@input = new Input @stage, @eventMap
+		@update = new Core.Update()
 
 		# load resources
 		@__loadResources()
