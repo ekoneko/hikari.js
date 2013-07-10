@@ -4,10 +4,11 @@ class Animate extends Object
 	@list: {}
 
 	@update: ()=>
-		item.update() for item in @list
+		@list[id].update() for id of @list
 
 	__type: 'animate'
 	__animateType: ''
+	__start: off
 
 	animateType: ()->
 		__animateType
@@ -16,10 +17,13 @@ class Animate extends Object
 
 	update: ()=>
 
+	running: ()=>
+		@__start
+
 	destory: ()->
 		delete Animate.list[@__id]
 		super()
 
 	constructor: ()->
 		@__id = Animate.id++
-		Animate.list[@__id]
+		Animate.list[@__id] = this

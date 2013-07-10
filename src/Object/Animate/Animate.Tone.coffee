@@ -1,4 +1,4 @@
-class Animate.Blink extends Animate
+class Animate.Tone extends Animate
 
 	__animateType: 'blink'
 
@@ -11,9 +11,8 @@ class Animate.Blink extends Animate
 		self.__orginTone = null
 		self.__newTone = null
 
-		self.entity = null	# 动画事体
-		self.color = null	# 闪烁颜色{r,g,b}
-		self.path = null
+		self.entity = null	# 动画实体
+		self.tone = null	# 变化色调
 		self.delta = 1		# 时间增量/帧
 		self.onFinish = null # 结束时回调
 
@@ -24,12 +23,16 @@ class Animate.Blink extends Animate
 
 		if @entity.tone()
 			@__orginTone = @entity.tone()
-			@__newTone = orginTone.clone()
+			@__newTone = @__orginTone.clone()
 		else
-			@__orginTone = null
-			@__newTone = new DataType.Tone()
+			@__orginTone = new Hikari.DataType.Tone()
+			@__newTone = @__orginTone.clone()
 		@__count = @__timer / @delta
 		on
+
+	renew: ()=>
+		@entity.__imageChanged = on
+		@entity.tone @__orginTone
 
 	update: ()=>
 		return off unless @__start
@@ -37,12 +40,12 @@ class Animate.Blink extends Animate
 		return on if --@__next > 0
 		@__next = @delta
 
-		r = @color.r / @__count * @__frame
-		g = @color.g / @__count * @__frame
-		b = @color.b / @__count * @__frame
-		@__newTone.red @__newTone.red() + r
-		@__newTone.green @__newTone.green() + g
-		@__newTone.blue @__newTone.blue() + b
+		r = (@tone.red() - @__orginTone.red()) / @__count * @__frame
+		g = (@tone.green() - @__orginTone.green()) / @__count * @__frame
+		b = (@tone.blue() - @__orginTone.blue()) / @__count * @__frame
+		@__newTone.red Math.min 255, Math.max(0, r)
+		@__newTone.green Math.min 255, Math.max(0, g)
+		@__newTone.blue Math.min 255, Math.max(0, b)
 
 		@entity.tone @__newTone
 
@@ -54,12 +57,11 @@ class Animate.Blink extends Animate
 			@__timer = 0
 			@__start = off
 			@entity.tone @__orginTone
-			@__newTone.destory()
-			@onFinish() if @onFinish is 'function'
+			@__newTone.destroy()
+			@onFinish() if typeof @onFinish is 'function'
 
-	constructor: (sprite, color, path)->
+	constructor: (sprite, tone)->
 		super()
 		init this
 		@entity = sprite
-		@path = path
-		@color = color
+		@tone = tone
