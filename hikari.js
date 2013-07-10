@@ -117,13 +117,11 @@
     Animate.list = {};
 
     Animate.update = function() {
-      var item, _i, _len, _ref, _results;
+      var id, _results;
 
-      _ref = Animate.list;
       _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        item = _ref[_i];
-        _results.push(item.update());
+      for (id in Animate.list) {
+        _results.push(Animate.list[id].update());
       }
       return _results;
     };
@@ -131,6 +129,8 @@
     Animate.prototype.__type = 'animate';
 
     Animate.prototype.__animateType = '';
+
+    Animate.prototype.__start = false;
 
     Animate.prototype.animateType = function() {
       return __animateType;
@@ -140,15 +140,20 @@
 
     Animate.prototype.update = function() {};
 
+    Animate.prototype.running = function() {
+      return this.__start;
+    };
+
     Animate.prototype.destory = function() {
       delete Animate.list[this.__id];
       return Animate.__super__.destory.call(this);
     };
 
     function Animate() {
+      this.running = __bind(this.running, this);
       this.update = __bind(this.update, this);
       this.start = __bind(this.start, this);      this.__id = Animate.id++;
-      Animate.list[this.__id];
+      Animate.list[this.__id] = this;
     }
 
     return Animate;
@@ -842,24 +847,6 @@
       return imageData = void 0;
     };
 
-    Stage.prototype.__updateVector = function() {
-      var i, item, list, _results;
-
-      list = this.list.vector;
-      list = sort(list);
-      i = 0;
-      _results = [];
-      while (item = list[i]) {
-        if (item && item.dispose()) {
-          item.update(this.context);
-          _results.push(i++);
-        } else {
-          _results.push(list.splice(i, 1));
-        }
-      }
-      return _results;
-    };
-
     Stage.prototype.append = function(o) {
       if (o.type() !== 'draw') {
         console.log('error: object cannt append to canvas', o);
@@ -883,14 +870,12 @@
       this.context.restore();
       this.context.save();
       this.context.clearRect(0, 0, this.width, this.height);
-      this.__updateSprite();
-      return this.__updateVector();
+      return this.__updateSprite();
     };
 
     function Stage(width, height, container) {
       this.update = __bind(this.update, this);
       this.append = __bind(this.append, this);
-      this.__updateVector = __bind(this.__updateVector, this);
       this.__updateSprite = __bind(this.__updateSprite, this);      this.list = {
         sprite: [],
         vector: []
@@ -964,88 +949,6 @@
     return Vector;
 
   })(Object);
-
-  Animate.Blink = (function(_super) {
-    var init;
-
-    __extends(Blink, _super);
-
-    Blink.prototype.__animateType = 'blink';
-
-    init = function(self) {
-      self.__timer = 0;
-      self.__frame = 0;
-      self.__count = 0;
-      self.__start = false;
-      self.__next = 0;
-      self.__orginTone = null;
-      self.__newTone = null;
-      self.entity = null;
-      self.color = null;
-      self.path = null;
-      self.delta = 1;
-      return self.onFinish = null;
-    };
-
-    Blink.prototype.start = function(timer) {
-      if (this.__start) {
-        return false;
-      }
-      this.__timer = timer;
-      this.__start = true;
-      if (this.entity.tone()) {
-        this.__orginTone = this.entity.tone();
-        this.__newTone = orginTone.clone();
-      } else {
-        this.__orginTone = null;
-        this.__newTone = new DataType.Tone();
-      }
-      this.__count = this.__timer / this.delta;
-      return true;
-    };
-
-    Blink.prototype.update = function() {
-      var b, g, r;
-
-      if (!this.__start) {
-        return false;
-      }
-      if (--this.__next > 0) {
-        return true;
-      }
-      this.__next = this.delta;
-      r = this.color.r / this.__count * this.__frame;
-      g = this.color.g / this.__count * this.__frame;
-      b = this.color.b / this.__count * this.__frame;
-      this.__newTone.red(this.__newTone.red() + r);
-      this.__newTone.green(this.__newTone.green() + g);
-      this.__newTone.blue(this.__newTone.blue() + b);
-      this.entity.tone(this.__newTone);
-      this.__frame += this.delta;
-      this.__timer -= this.delta;
-      if (this.__timer < 1) {
-        this.__timer = 0;
-        this.__start = false;
-        this.entity.tone(this.__orginTone);
-        this.__newTone.destory();
-        if (this.onFinish === 'function') {
-          return this.onFinish();
-        }
-      }
-    };
-
-    function Blink(sprite, color, path) {
-      this.update = __bind(this.update, this);
-      this.start = __bind(this.start, this);      Blink.__super__.constructor.call(this);
-      init(this);
-      this.entity = sprite;
-      this.path = path;
-      this.color = color;
-    }
-
-    return Blink;
-
-  })(Animate);
 
   Animate.Marquee = (function(_super) {
     var init;
@@ -1166,6 +1069,87 @@
     }
 
     return Move;
+
+  })(Animate);
+
+  Animate.Tone = (function(_super) {
+    var init;
+
+    __extends(Tone, _super);
+
+    Tone.prototype.__animateType = 'blink';
+
+    init = function(self) {
+      self.__timer = 0;
+      self.__frame = 0;
+      self.__count = 0;
+      self.__start = false;
+      self.__next = 0;
+      self.__orginTone = null;
+      self.__newTone = null;
+      self.entity = null;
+      self.tone = null;
+      self.delta = 1;
+      return self.onFinish = null;
+    };
+
+    Tone.prototype.start = function(timer) {
+      if (this.__start) {
+        return false;
+      }
+      this.__timer = timer;
+      this.__start = true;
+      if (this.entity.tone()) {
+        this.__orginTone = this.entity.tone();
+        this.__newTone = this.__orginTone.clone();
+      } else {
+        this.__orginTone = null;
+        this.__newTone = new Hikari.DataType.Tone();
+      }
+      this.__count = this.__timer / this.delta;
+      return true;
+    };
+
+    Tone.prototype.update = function() {
+      var b, g, r;
+
+      if (!this.__start) {
+        return false;
+      }
+      if (--this.__next > 0) {
+        return true;
+      }
+      this.__next = this.delta;
+      r = (this.tone.red() - this.__newTone.red()) / this.__count * this.__frame;
+      g = (this.tone.green() - this.__newTone.green()) / this.__count * this.__frame;
+      b = (this.tone.blue() - this.__newTone.blue()) / this.__count * this.__frame;
+      this.__newTone.red(Math.min(255, Math.max(0, r)));
+      this.__newTone.green(Math.min(255, Math.max(0, g)));
+      this.__newTone.blue(Math.min(255, Math.max(0, b)));
+      this.entity.tone(this.__newTone);
+      this.__frame += this.delta;
+      this.__timer -= this.delta;
+      if (this.__timer < 1) {
+        this.__timer = 0;
+        this.__start = false;
+        this.entity.tone(this.__orginTone);
+        console.log(this.__newTone);
+        this.__newTone.destroy();
+        if (this.onFinish === 'function') {
+          return this.onFinish();
+        }
+      }
+    };
+
+    function Tone(sprite, tone) {
+      this.update = __bind(this.update, this);
+      this.start = __bind(this.start, this);      Tone.__super__.constructor.call(this);
+      init(this);
+      this.entity = sprite;
+      this.tone = tone;
+    }
+
+    return Tone;
 
   })(Animate);
 
@@ -2066,6 +2050,9 @@
       if (this.__bitmap && this.__bitmap.dispose()) {
         this.__bitmap.update(cache, this.__options.bx, this.__options.by, this.__options.bw, this.__options.bh);
       }
+      if (this.__vector && this.__vector.dispose()) {
+        this.__vector.update(cache);
+      }
       this.__imageChanged = false;
       return cache;
     };
@@ -2127,6 +2114,21 @@
         }
       }
       return this.__bitmap;
+    };
+
+    Sprite.prototype.vector = function(vector, x, y, options) {
+      if (!(this.__vector && this.__vector.drawType() === 'vector')) {
+        this.__vector = new Draw.Vector(x, y);
+      }
+      if (vector.type() === 'vector') {
+        this.__vector.append(vector);
+        this.__imageChanged = true;
+        this.__vector.options(options);
+        if (this.__stage) {
+          this.__stage.needUpdate = true;
+        }
+      }
+      return this.__vector;
     };
 
     Sprite.prototype.draw = function(stage) {
@@ -2207,6 +2209,7 @@
       this.offset = __bind(this.offset, this);
       this.update = __bind(this.update, this);
       this.draw = __bind(this.draw, this);
+      this.vector = __bind(this.vector, this);
       this.bitmap = __bind(this.bitmap, this);
       this.tone = __bind(this.tone, this);
       this.__updateImageData = __bind(this.__updateImageData, this);

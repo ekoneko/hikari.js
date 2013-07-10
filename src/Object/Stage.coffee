@@ -57,16 +57,16 @@ class Stage extends Object
 		@context.putImageData imageData, 0, 0
 		imageData = undefined
 
-	__updateVector: ()=>
-		list = @list.vector
-		list = sort list
-		i = 0
-		while item = list[i]
-			if item and item.dispose()
-				item.update @context
-				i++
-			else
-				list.splice i, 1
+	# __updateVector: ()=>
+	# 	list = @list.vector
+	# 	list = sort list
+	# 	i = 0
+	# 	while item = list[i]
+	# 		if item and item.dispose()
+	# 			item.update @context
+	# 			i++
+	# 		else
+	# 			list.splice i, 1
 
 	append: (o)=>
 		unless o.type() is 'draw'
@@ -89,7 +89,7 @@ class Stage extends Object
 		@context.clearRect 0, 0, @width, @height
 
 		@__updateSprite()
-		@__updateVector()
+		#@__updateVector()
 
 	constructor: (width, height, container)->
 		@list =

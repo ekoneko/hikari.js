@@ -21,6 +21,8 @@ class Draw.Sprite extends Draw
 		cache.clearRect 0, 0, @__width, @__height
 		if @__bitmap and @__bitmap.dispose()
 			@__bitmap.update cache, @__options.bx, @__options.by, @__options.bw, @__options.bh
+		if @__vector and @__vector.dispose()
+			@__vector.update cache
 		@__imageChanged = off
 		cache
 
@@ -61,6 +63,16 @@ class Draw.Sprite extends Draw
 			@__imageChanged = on
 			@__stage.needUpdate = on if @__stage
 		@__bitmap
+
+	vector: (vector, x, y, options)=>
+		unless @__vector and @__vector.drawType() is 'vector'
+			@__vector = new Draw.Vector x, y
+		if vector.type() is 'vector'
+			@__vector.append vector
+			@__imageChanged = on
+			@__vector.options options
+			@__stage.needUpdate = on if @__stage
+		@__vector
 
 	draw: (stage)=>
 		@__stage = stage
