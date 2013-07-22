@@ -20,7 +20,7 @@ class Draw.Sprite extends Draw
 		cache.save()
 		cache.clearRect 0, 0, @__width, @__height
 		if @__bitmap and @__bitmap.dispose()
-			@__bitmap.update cache, @__options.bx, @__options.by, @__options.bw, @__options.bh
+			@__bitmap.update cache, -@__options.bx, -@__options.by, @__options.bw, @__options.bh
 		if @__vector and @__vector.dispose()
 			@__vector.update cache
 		@__imageChanged = off
@@ -52,10 +52,10 @@ class Draw.Sprite extends Draw
 
 	bitmap: (bitmap, x, y, width, height)=>
 		if bitmap and bitmap.type() is 'draw' and bitmap.drawType() is 'bitmap'
-			@__options.bx = x if x
-			@__options.by = y if y
-			@__options.bw = width if width
-			@__options.bh = height if height
+			@__options.bx = if x then x else 0
+			@__options.by = if y then y else 0
+			@__options.bw = if width then width else bitmap.__width
+			@__options.bh = if height then height else bitmap.__height
 
 			@__width = @__options.bw or bitmap.width() unless @__width
 			@__height = @__options.bh or bitmap.height() unless @__height
@@ -106,14 +106,19 @@ class Draw.Sprite extends Draw
 			ret = off
 
 	offset: (dx, dy)=>
-		dx = @__options.bw * dx if dx < 1
-		dy = @__options.bh * dy if dy < 1
+		# 若小于1则视为按百分比偏移
+		dx = @__options.bw * dx if Math.abs(dx) < 1
+		dy = @__options.bh * dy if Math.abs(dy) < 1
+
 		@__options.bx += dx % @__options.bw
 		@__options.bx -= @__options.bw if @__options.bx > @__options.bw
 		@__options.bx += @__options.bw if @__options.bx < 0
 		@__options.by += dy % @__options.bh
 		@__options.by -= @__options.bh if @__options.by > @__options.bh
 		@__options.by += @__options.bh if @__options.by < 0
+
+		@__imageChanged = on
+		@__stage.needUpdate = on if @__stage
 
 	clone: ()=>
 		dest = new Draw.Sprite()
