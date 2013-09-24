@@ -1,11 +1,8 @@
 class Input.Keyboard extends Input
 
-	init = (self)->
-		self.press = null
+	press: null
 
-	constructor:(dom)->
-		init this
-
+	constructor:(dom) ->
 		textarea = document.createElement 'textarea'
 		textarea.style.position = 'fixed'
 		textarea.style.left = '-500px'
@@ -13,7 +10,7 @@ class Input.Keyboard extends Input
 		dom.addEventListener 'click', ()->
 			textarea.focus()
 
-		document.body.addEventListener 'keydown', (event)=>
+		document.body.addEventListener 'keydown', (event) =>
 			identity = parseInt event.keyCode, 10
 			identity += 256 if event.altKey		# 1 >> 8
 			identity += 512 if event.ctrlKey	# 1 >> 9

@@ -1,1 +1,1 @@
-Const = {}
+Const = new Object()

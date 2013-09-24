@@ -2,21 +2,25 @@ class Animate.Tone extends Animate
 
 	__animateType: 'blink'
 
-	init = (self)->
-		self.__timer = 0	# 计时器
-		self.__frame = 0	# 当前帧
-		self.__count = 0	# 总帧
-		self.__start = off	# 是否开始动画
-		self.__next = 0		# 下次刷新计时
-		self.__orginTone = null
-		self.__newTone = null
+	__timer: 0		# 计时器
+	__frame:0		# 当前帧
+	__count: 0		# 总帧
+	__start: off	# 是否开始动画
+	__next: 0		# 下次刷新计时
+	__orginTone: null
+	__newTone: null
 
-		self.entity = null	# 动画实体
-		self.tone = null	# 变化色调
-		self.delta = 1		# 时间增量/帧
-		self.onFinish = null # 结束时回调
+	entity: null	# 动画实体
+	tone: null		# 变化色调
+	delta: 1		# 时间增量/帧
+	onFinish: null	# 结束时回调
 
-	start: (timer)=>
+	constructor: (sprite, tone) ->
+		super()
+		@entity = sprite
+		@tone = tone
+
+	start: (timer) =>
 		return off if @__start
 		@__timer = timer
 		@__start = on
@@ -30,16 +34,15 @@ class Animate.Tone extends Animate
 		@__count = @__timer / @delta
 		on
 
-	renew: ()=>
+	renew: =>
 		@entity.__imageChanged = on
 		@entity.tone @__orginTone
 
-	update: ()=>
+	update: =>
 		return off unless @__start
-
 		return on if --@__next > 0
-		@__next = @delta
 
+		@__next = @delta
 		r = (@tone.red() - @__orginTone.red()) / @__count * @__frame
 		g = (@tone.green() - @__orginTone.green()) / @__count * @__frame
 		b = (@tone.blue() - @__orginTone.blue()) / @__count * @__frame
@@ -59,9 +62,3 @@ class Animate.Tone extends Animate
 			@entity.tone @__orginTone
 			@__newTone.destroy()
 			@onFinish() if typeof @onFinish is 'function'
-
-	constructor: (sprite, tone)->
-		super()
-		init this
-		@entity = sprite
-		@tone = tone

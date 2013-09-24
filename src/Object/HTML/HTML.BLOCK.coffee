@@ -1,18 +1,19 @@
 class HTML.BLOCK extends HTML
 
 	__htmlType: 'block'
+	__options:
+		x: 0
+		y: 0
+		z: 1
+		width: 0
+		height: 0
 
-	init = (self)->
-		self.__options =
-			x: 0
-			y: 0
-			z: 1
-			width: 0
-			height: 0
+	stage: null
 
-		self.stage = null
+	constructor: (stage) ->
+		@stage = stage if stage and stage.type() is 'stage'
 
-	__style: (div)=>
+	__style: (div) =>
 		div.style.position = 'absolute'
 		div.style.left = "#{@__options.x}px"
 		div.style.top = "#{@__options.y}px"
@@ -20,7 +21,7 @@ class HTML.BLOCK extends HTML
 		div.style.height = "#{@__options.height}px"
 		div.style.zIndex = @__options.z
 
-	build: (options, callback)=>
+	build: (options, callback) =>
 		@element = document.createElement 'div'
 		@options options
 
@@ -32,16 +33,11 @@ class HTML.BLOCK extends HTML
 
 		callback() if typeof callback is 'function'
 
-	destroy: ()=>
+	destroy: =>
 		@remove()
 		super()
 
-	options: (options)=>
+	options: (options) =>
 		for i in ['x', 'y', 'z', 'width', 'height']
 			@__options[i] = options[i] if options[i]
 		@__style @element
-
-	constructor: (stage)->
-		init this
-
-		@stage = stage if stage and stage.type() is 'stage'

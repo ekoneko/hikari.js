@@ -1,14 +1,21 @@
 class DataType.Color extends DataType
 
 	__dataType: 'color'
+	__options:
+		r: 0
+		g: 0
+		b: 0
 
-	init = (self)->
-		self.__options =
-			r: 0
-			g: 0
-			b: 0
+	constructor: (r, g, b) ->
+		if r[0] is '#'
+			@set r
+		else
+			@set
+				r: r
+				g: g
+				b: b
 
-	hex2dec = (hex)=>
+	hex2dec = (hex) =>
 		r = parseInt hex.substr(1, 2), 16
 		g = parseInt hex.substr(3, 4), 16
 		b = parseInt hex.substr(5, 6), 16
@@ -17,41 +24,41 @@ class DataType.Color extends DataType
 			g: g
 			b: b
 
-	dec2hex = (r, g, b)=>
+	dec2hex = (r, g, b) =>
 		ret = '#'
 		ret += r.toString 16
 		ret += g.toString 16
 		ret += b.toString 16
 		ret
 
-	scope = (value, min, max)=>
+	scope = (value, min, max) =>
 		Math.max min, Math.min(value, max)
 
-	getRGB: ()=>
+	getRGB: =>
 		"(#{@__options.r}, #{@__options.g}, #{@__options.b})"
 
-	red: (r)=>
+	red: (r) =>
 		if typeof r is 'number'
 			@__options.r = scope r, 0, 255
 		@__options.r
 
-	green: (g)=>
+	green: (g) =>
 		if typeof g is 'number'
 			@__options.g = scope g, 0, 255
 		@__options.g
 
-	blue: (b)=>
+	blue: (b) =>
 		if typeof b is 'number'
 			@__options.b = scope b, 0, 255
 		@__options.b
 
-	hex: (hex)=>
+	hex: (hex) =>
 		if hex and /#[0-9A-Fa-f]{6}/.test(hex)
 			@set hex
 			return hex
 		dec2hex @__options.r, @__options.g, @__options.b
 
-	set: (color, value)=>
+	set: (color, value) =>
 		if typeof color is 'object'
 			@red(color.r or color.R)
 			@green(color.g or color.G)
@@ -65,16 +72,5 @@ class DataType.Color extends DataType
 				this[i] rgb[i] for i in ['r', 'g', 'b']
 		this
 
-	clone: ()=>
-		new DataType.Color @__options
-
-	constructor: (r, g, b) ->
-		init this
-
-		if r[0] is '#'
-			@set r
-		else
-			@set
-				r: r
-				g: g
-				b: b
+	clone: =>
+		new DataType.Color @__options.r, @__options.g, @__options.b

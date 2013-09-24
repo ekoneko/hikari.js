@@ -6,6 +6,27 @@ class @Hikari
 	times: 0
 	fps: 0
 
+	constructor: (container, width, height, callback) ->
+		@__delay = @update = null
+		@fps = 30
+		@times = 1000 / 30
+
+		@__init()
+
+		# Draw Stage
+		@stage = new Stage width, height, container
+
+		@eventMap = new EventMap width, height
+		@input = new Input @stage, @eventMap
+		@update = new Core.Update()
+
+		# load resources
+		@__loadResources()
+
+		@__update()
+
+		callback this if typeof callback is 'function'
+
 	# global variable initialization
 	global = =>
 		@Audio		= Audio
@@ -38,24 +59,3 @@ class @Hikari
 		@input.update()
 		@update.update()
 		@__delay @__update
-
-	constructor: (container, width, height, callback)->
-		@__delay = @update = null
-		@fps = 30
-		@times = 1000 / 30
-
-		@__init()
-
-		# Draw Stage
-		@stage = new Stage width, height, container
-
-		@eventMap = new EventMap width, height
-		@input = new Input @stage, @eventMap
-		@update = new Core.Update()
-
-		# load resources
-		@__loadResources()
-
-		@__update()
-
-		callback this if typeof callback is 'function'

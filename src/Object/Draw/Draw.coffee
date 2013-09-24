@@ -1,53 +1,53 @@
 class Draw extends Object
 
 	__type: 'draw'
-
+	__drawType: ''
 	__x: 0
 	__y: 0
 	__z: 0
 	__width: 0
 	__height: 0
 	__stage: null
-	__options: {}
+	__options: new Object()
 
-	drawType: ()=>
+	drawType: =>
 		@__drawType
 
-	x: (x)=>
+	x: (x) =>
 		if typeof x is 'number'
 			@__x = x
 			@__stage.needUpdate = on if @__stage
 		@__x
 
-	y: (y)=>
+	y: (y) =>
 		if typeof y is 'number'
 			@__y = y
 			@__stage.needUpdate = on if @__stage
 		@__y
 
-	z: (z)=>
+	z: (z) =>
 		if typeof z is 'number'
 			@__z = Math.min 200, Math.max(0, z)
 			@__stage.needUpdate = on if @__stage
 		@__z
 
-	width: (width)=>
+	width: (width) =>
 		if typeof width is 'number'
 			@__width = width
 			@__stage.needUpdate = on if @__stage
 		@__width
 
-	height: (height)=>
+	height: (height) =>
 		if typeof height is 'number'
 			@__height = height
 			@__stage.needUpdate = on if @__stage
 		@__height
 
-	draw: (stage)=>
+	draw: (stage) =>
 
-	update: ()=>
+	update: =>
 
-	options: (options)=>
+	options: (options) =>
 		if typeof options is 'object'
 			for key of options
 				unless typeof @__options[key] is 'undefined'
@@ -55,18 +55,15 @@ class Draw extends Object
 			@__stage.needUpdate = on if @__stage
 		@__options
 
-	clone: (dest, src)=>
-		for key in ['options', 'x', 'y', 'z', 'width', 'height']
-			dest["__#{key}"] = src["__#{key}"]
-		dest
+	clone: =>
 
-	dispose: (value)=>
+	dispose: (value) =>
 		if typeof value isnt 'undefined'
 			@__isDisposed = value
 			@__stage.needUpdate = on if @__stage
 		@__isDisposed
 
-	destroy: ()=>
+	destroy: =>
 		@isDisposed = off
 		@__stage.needUpdate = on if @__stage
 		super()

@@ -1,18 +1,19 @@
 class Vector extends Object
 
 	__type: 'vector'
-	__options: {}
+	__vectorType: ''
+	__options: new Object()
 
-	vectorType: ()=>
+	vectorType: =>
 		@__vectorType
 
-	isInside: (x, y)=>
+	isInside: (x, y) =>
 
-	move: (dx, dy)=>
+	move: (dx, dy) =>
 
-	options: (_options)=>
-		if _options
-			for key of _options
-				unless typeof @__options[key] is 'undefined'
-					@__options[key] = _options[key]
+	options: (options) =>
+		if options
+			@__options[key] = options[key] for key of options when typeof @__options[key] isnt 'undefined'
 		@__options
+
+	clone: =>

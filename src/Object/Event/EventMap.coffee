@@ -1,18 +1,88 @@
 class EventMap extends Object
 
-	init = (self)->
-		self.width = 0
-		self.height = 0
-		self.grid = 50
-		self.keyEvent = {}
-		self.mouseEvent = []
+	width: 0
+	height: 0
+	grid: 50
+	keyEvent: new Object()
+	mouseEvent: new Array()
 
-	sortEvent = (array)->
-		array = array.sort (a, b)->
-			Event.list[a].priority > Event.list[b].priority
+	constructor: (width, height, grid) ->
+		@grid = grid if grid
+		lineCount = Math.ceil width / @grid
+		rowCount = Math.ceil height / @grid
+		for l in [0...lineCount]
+			@mouseEvent[l] = new Array rowCount
+			for r in [0...rowCount]
+				@mouseEvent[l][r] =
+					click:
+						'1': []	# 左键
+						'2': []	# 右键
+						'3': []	# 左键 or 右键
+					hover:[]
+
+	sortEvent = (array) ->
+		array.sort (a, b)->
+			return 1 if Event.list[a].priority > Event.list[b].priority
+			return -1
+
+	register: (event) =>
+		switch event.eventType
+			when 'keyPress'
+				if typeof @keyEvent[event.condition] is 'undefined'
+					@keyEvent[event.condition] = new Array()
+				@__pushEvent @keyEvent[event.condition], event.__id
+			when 'hover'
+				scope = @__detectScope event.condition.scope
+				for item in scope
+					continue unless @mouseEvent[item[0]] and @mouseEvent[item[0]][item[1]]
+					@__pushEvent @mouseEvent[item[0]][item[1]].hover, event.__id
+			when 'click'
+				scope = @__detectScope event.condition.scope
+				event.condition.button = 1 unless event.condition.button
+				for item in scope
+					continue unless @mouseEvent[item[0]] and @mouseEvent[item[0]][item[1]]
+					@__pushEvent @mouseEvent[item[0]][item[1]].click[event.condition.button], event.__id
+		event.map = this
+		this
+
+	revoke: (event) =>
+		switch event.eventType
+			when 'keyPress'
+				i = @keyEvent[event.condition].indexOf event.__id
+				@keyEvent[event.condition].splice i, 1 if i > -1
+			when 'hover'
+				for lines in @mouseEvent
+					for item in lines
+						i = item.hover.indexOf event.__id
+						item.hover.splice i, 1 if i > -1
+			when 'click'
+				for lines in @mouseEvent
+					for item in lines
+						continue unless item.click[event.condition.button] and item.click[event.condition.button].length
+						i = item.click[event.condition.button].indexOf event.__id
+						item.click[event.condition.button].splice i, 1 if i > -1
+		this
+
+
+	trigger: (type, action) =>
+		switch type
+			when 'keyPress'
+				@__triggerKeyPress action.identity
+				break
+			when 'click'
+				@__triggerClick action
+				break
+			when 'hover'
+				@__triggerHover action
+				break
+		this
+
+	modify: (event) =>
+		@revoke event
+		@register event
 
 	# 计算鼠标操作范围尺寸
-	__detectScope: (scope)=>
+	__detectScope: (scope) =>
 		ret = []
 		if scope.vectorType() is 'rect'
 			x = scope.__options.start.x
@@ -36,12 +106,12 @@ class EventMap extends Object
 				ret.push [j, i]
 		ret
 
-	__triggerKeyPress: (keyCode)=>
+	__triggerKeyPress: (keyCode) =>
 		return if typeof @keyEvent[keyCode] is 'undefined'
 		events = @keyEvent[keyCode].concat()
 		@__exec events
 
-	__triggerClick: (action)=>
+	__triggerClick: (action) =>
 		x = parseInt action.x / @grid, 10
 		y = parseInt action.y / @grid, 10
 		list = @mouseEvent[x][y].click
@@ -58,7 +128,7 @@ class EventMap extends Object
 				events.splice i, 1
 		@__exec events
 
-	__triggerHover: (action)=>
+	__triggerHover: (action) =>
 		x = parseInt action.x / @grid, 10
 		y = parseInt action.y / @grid, 10
 		events = @mouseEvent[x][y].hover.concat()
@@ -72,85 +142,14 @@ class EventMap extends Object
 				events.splice i, 1
 		@__exec events
 
-	__exec: (events)=>
+	__exec: (events) =>
 		return unless events and events.length
 		event = Event.list[events.pop()]
 		return unless event.type() is 'event'
-		event.exec ()=>
+		event.exec =>
 			@__exec events
 
-	__pushEvent: (stack, eventId)=>
+	__pushEvent: (stack, eventId) =>
 		return unless stack or stack.length
 		stack.push eventId
 		sortEvent stack
-
-	register: (event)=>
-		switch event.eventType
-			when 'keyPress'
-				if typeof @keyEvent[event.condition] is 'undefined'
-					@keyEvent[event.condition] = new Array()
-				@__pushEvent @keyEvent[event.condition], event.__id
-			when 'hover'
-				scope = @__detectScope event.condition.scope
-				for item in scope
-					continue unless @mouseEvent[item[0]] and @mouseEvent[item[0]][item[1]]
-					@__pushEvent @mouseEvent[item[0]][item[1]].hover, event.__id
-			when 'click'
-				scope = @__detectScope event.condition.scope
-				event.condition.button = 1 unless event.condition.button
-				for item in scope
-					continue unless @mouseEvent[item[0]] and @mouseEvent[item[0]][item[1]]
-					@__pushEvent @mouseEvent[item[0]][item[1]].click[event.condition.button], event.__id
-		event.map = this
-		this
-
-	revoke: (event)=>
-		switch event.eventType
-			when 'keyPress'
-				i = @keyEvent[event.condition].indexOf event.__id
-				@keyEvent[event.condition].splice i, 1 if i > -1
-			when 'hover'
-				for lines in @mouseEvent
-					for item in lines
-						i = item.hover.indexOf event.__id
-						item.hover.splice i, 1 if i > -1
-			when 'click'
-				for lines in @mouseEvent
-					for item in lines
-						continue unless item.click[event.condition.button] and item.click[event.condition.button].length
-						i = item.click[event.condition.button].indexOf event.__id
-						item.click[event.condition.button].splice i, 1 if i > -1
-		this
-
-
-	trigger: (type, action)=>
-		switch type
-			when 'keyPress'
-				@__triggerKeyPress action.identity
-				break
-			when 'click'
-				@__triggerClick action
-				break
-			when 'hover'
-				@__triggerHover action
-				break
-
-	modify: (event)=>
-		@revoke event
-		@register event
-
-	constructor: (width, height, grid)->
-		init this
-
-		@grid = grid if grid
-		lineCount = Math.ceil width / @grid
-		rowCount = Math.ceil height / @grid
-		for l in [0...lineCount]
-			@mouseEvent[l] = new Array rowCount
-			for r in [0...rowCount]
-				@mouseEvent[l][r] =
-					click:
-						'1': []	# 左键
-						'2': []	# 右键
-						'3': []	# 左键 or 右键
-					hover:[]

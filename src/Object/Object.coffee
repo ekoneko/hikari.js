@@ -1,16 +1,15 @@
 class Object
 
-	type: ()=>
+	type: =>
 		@__type or 'object'
 
-	get: (key)=>
+	get: (key) =>
 		this[key]
 
-	set: (options)=>
-		for key of options
-			if typeof this[key] isnt 'undefined'
-				this[key] = options[key]
-		true
+	set: (options) =>
+		this[key] = options[key] for key of options \
+			when this[key] isnt 'undefined'
+		on
 
-	destroy: ()=>
+	destroy: =>
 		delete this

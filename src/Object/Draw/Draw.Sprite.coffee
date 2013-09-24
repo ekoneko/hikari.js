@@ -3,68 +3,50 @@ class Draw.Sprite extends Draw
 	zAutoIncrement = 0
 	
 	__drawType: 'sprite'
+	__tone: null
+	__stage: null
+	__bitmap: null
+	__canvas: null
+	__context: null
+	__imageData: null
+	__isDisposed: off
+	__imageChanged: off
+	__toneChanged: off
+	__options:
+		bx: 0
+		by: 0
+		bw: 0
+		bh: 0
 
-	init = (self)->
-		self.__tone = self.__stage = self.__bitmap =
-		self.__canvas = self.__context = self.__imageData = null
-		self.__isDisposed = self.__imageChanged = self.__toneChanged = off
-		self.__options =
-			bx: 0
-			by: 0
-			bw: 0
-			bh: 0
+	constructor: (width, height, x, y) ->
+		@width width
+		@height height
+		@x x
+		@y y
+		@z zAutoIncrement++
 
-	__updateCanvas: ()=>
-		cache = @__canvas.getContext '2d'
-		cache.restore()
-		cache.save()
-		cache.clearRect 0, 0, @__width, @__height
-		if @__bitmap and @__bitmap.dispose()
-			@__bitmap.update cache, -@__options.bx, -@__options.by, @__options.bw, @__options.bh
-		if @__vector and @__vector.dispose()
-			@__vector.update cache
-		@__imageChanged = off
-		cache
-
-	__updateImageData: ()=>
-		return unless @__tone and !@__tone.noChange
-		i = 0
-		while i < @__imageData.data.length
-			data = @__tone.mix @__imageData.data[i],
-				@__imageData.data[i + 1],
-				@__imageData.data[i + 2],
-				@__imageData.data[i + 3]
-
-			@__imageData.data[i] = data[0]
-			@__imageData.data[i + 1] = data[1]
-			@__imageData.data[i + 2] = data[2]
-			@__imageData.data[i + 3] = data[3]
-			i += 4
-		@__toneChanged = off
-		true
-
-	tone: (t)=>
-		if t and t.type() is 'datatype' and t.dataType() is 'tone'
-			@__tone = t
+	tone: (tone) =>
+		if tone and tone.type() is 'datatype' and tone.dataType() is 'tone'
+			@__tone = tone
 			@__toneChanged = on
 			@__stage.needUpdate = on if @__stage
 		@__tone
 
-	bitmap: (bitmap, x, y, width, height)=>
+	bitmap: (bitmap, x = 0, y = 0, width, height) =>
 		if bitmap and bitmap.type() is 'draw' and bitmap.drawType() is 'bitmap'
-			@__options.bx = if x then x else 0
-			@__options.by = if y then y else 0
+			@__options.bx = x
+			@__options.by = y
 			@__options.bw = if width then width else bitmap.__width
 			@__options.bh = if height then height else bitmap.__height
 
-			@__width = @__options.bw or bitmap.width() unless @__width
-			@__height = @__options.bh or bitmap.height() unless @__height
+			@__width ?= @__options.bw or bitmap.width()
+			@__height ?= @__options.bh or bitmap.height()
 			@__bitmap = bitmap
 			@__imageChanged = on
 			@__stage.needUpdate = on if @__stage
 		@__bitmap
 
-	vector: (vector, x, y, options)=>
+	vector: (vector, x, y, options) =>
 		unless @__vector and @__vector.drawType() is 'vector'
 			@__vector = new Draw.Vector x, y
 		if vector.type() is 'vector'
@@ -74,7 +56,7 @@ class Draw.Sprite extends Draw
 			@__stage.needUpdate = on if @__stage
 		@__vector
 
-	draw: (stage)=>
+	draw: (stage) =>
 		@__stage = stage
 		@__context = stage.context
 		@__isDisposed = on
@@ -84,7 +66,7 @@ class Draw.Sprite extends Draw
 			@__canvas.height = @__height
 		@update()
 
-	update: (_context)=>
+	update: (_context) =>
 		@__context = _context if _context
 		return off unless @__isDisposed and @__context
 
@@ -105,7 +87,7 @@ class Draw.Sprite extends Draw
 		else
 			ret = off
 
-	offset: (dx, dy)=>
+	offset: (dx, dy) =>
 		# 若小于1则视为按百分比偏移
 		dx = @__options.bw * dx if Math.abs(dx) < 1
 		dy = @__options.bh * dy if Math.abs(dy) < 1
@@ -120,17 +102,41 @@ class Draw.Sprite extends Draw
 		@__imageChanged = on
 		@__stage.needUpdate = on if @__stage
 
-	clone: ()=>
-		dest = new Draw.Sprite()
-		dest = super dest, this
-		dest.bitmap @__bitmap.clone()
-		dest
+	clone: =>
+		newSprite = new Draw.Sprite @__width, @__height, @__x, @__y
+		if @__bitmap and @__bitmap.drawType() is 'bitmap'
+			newSprite.bitmap @__bitmap.clone(),
+				@__options.bx,
+				@__options.by,
+				@__options.bw,
+				@__options.by
+		newSprite
 
-	constructor: (width, height, x, y)->
-		init this
+	__updateCanvas: =>
+		cache = @__canvas.getContext '2d'
+		cache.restore()
+		cache.save()
+		cache.clearRect 0, 0, @__width, @__height
+		if @__bitmap and @__bitmap.dispose()
+			@__bitmap.update cache, -@__options.bx, -@__options.by, @__options.bw, @__options.bh
+		if @__vector and @__vector.dispose()
+			@__vector.update cache
+		@__imageChanged = off
+		cache
 
-		@width width
-		@height height
-		@x x
-		@y y
-		@z zAutoIncrement++
+	__updateImageData: =>
+		return unless @__tone and !@__tone.noChange
+		i = 0
+		while i < @__imageData.data.length
+			data = @__tone.mix @__imageData.data[i],
+				@__imageData.data[i + 1],
+				@__imageData.data[i + 2],
+				@__imageData.data[i + 3]
+
+			@__imageData.data[i] = data[0]
+			@__imageData.data[i + 1] = data[1]
+			@__imageData.data[i + 2] = data[2]
+			@__imageData.data[i + 3] = data[3]
+			i += 4
+		@__toneChanged = off
+		on

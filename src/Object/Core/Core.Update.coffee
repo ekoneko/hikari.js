@@ -1,14 +1,12 @@
 class Core.Update extends Core
-	functions: null
-	bind: (name, func)=>
+	functions: new Object()
+
+	bind: (name, func) =>
 		functions[name] = func if typeof func is 'function'
 
-	unbind: ()=>
+	unbind: (name) =>
 		delete functions[name]
 
-	update: ()=>
-
-		for func in @functions
-			func() if typeof func is 'function'
-	constructor: () ->
-		@functions = {}
+	update: =>
+			func.call() for func in @functions \
+				when typeof func is 'function'

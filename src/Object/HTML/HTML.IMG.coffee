@@ -1,18 +1,19 @@
 class HTML.IMG extends HTML
 	
 	__htmlType: 'img'
+	__options:
+		x: 0
+		y: 0
+		z: 1
+		width: 0
+		height: 0
 
-	init: (self)->
-		self.__options =
-			x: 0
-			y: 0
-			z: 1
-			width: 0
-			height: 0
+	stage: null
 
-		self.stage = null
+	constructor: (stage) ->
+		@stage = stage if stage and stage.type() is 'stage'
 
-	__style: (img)=>
+	__style: (img) =>
 		img.style.position = 'absolute'
 		img.style.left = "#{@__options.x}px"
 		img.style.top = "#{@__options.y}px"
@@ -20,9 +21,9 @@ class HTML.IMG extends HTML
 		img.width = @__options.width
 		img.height = @__options.height
 
-	build: (options, callback)=>
+	build: (options, callback) =>
 		@element = new Image()
-		@element.onload = ()->
+		@element.onload = ->
 			callback() if typeof callback is 'function'
 
 		for i in ['x', 'y', 'z', 'width', 'height']
@@ -31,15 +32,11 @@ class HTML.IMG extends HTML
 		@__style @element
 		@element.src = options.src
 
-	destroy: ()=>
+	destroy: =>
 		@remove()
 		super()
 
-	set: (options)=>
+	set: (options) =>
 		for i in ['x', 'y', 'z', 'width', 'height']
 			@__options[i] = options[i] if options[i]
 		@__style @element
-
-	constructor: (stage)->
-		init this
-		@stage = stage if stage and stage.type() is 'stage'
